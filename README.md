@@ -1,84 +1,368 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# HRM System (Laravel 10 + Vue 3 + Sanctum)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A comprehensive Human Resource Management system built with Laravel 10, Vue 3, and Laravel Sanctum. Features role-based access control, employee management, attendance tracking, leave management, and admin management.
 
-## HRM SPA (Laravel 10 + Vue 3 + Sanctum)
+## 🚀 Features
 
-Minimal role-based SPA auth using Sanctum (session cookies), with Tailwind UI.
+### Core Modules
+- **Authentication System** - Secure login/logout with password reset
+- **Employee Management** - Complete CRUD for employees with departments and designations
+- **Attendance Management** - Daily attendance tracking with check-in/out times
+- **Leave Management** - Leave request system with approval workflow
+- **Holiday Management** - Company holiday calendar
+- **Admin Management** - User administration (System Admin only)
 
-### Setup
+### Role-Based Access Control
+- **System Admin** - Full access to all modules and features
+- **HR Manager** - Access to Employee Management, Attendance, Payroll, Reports
+- **Supervisor** - Read-only access to most modules (no create/edit/delete)
 
-1. composer install
-2. cp .env.example .env and configure DB
-3. php artisan key:generate
-4. php artisan migrate --seed
-5. npm install
-6. npm run dev
-7. php artisan serve
+### Technical Features
+- **SPA Architecture** - Single Page Application with Vue 3
+- **API-First Design** - RESTful APIs with Laravel Sanctum authentication
+- **Responsive UI** - Tailwind CSS with smooth animations and transitions
+- **Soft Deletes** - Data preservation with soft deletion
+- **Activity Logging** - Comprehensive audit trail for all actions
+- **File Uploads** - Avatar uploads with Laravel storage
 
-If using different domains/ports, set in .env:
-- SESSION_DOMAIN, SANCTUM_STATEFUL_DOMAINS
+## 🛠 Tech Stack
 
-Seeded admin: admin@example.com / password123
+### Backend
+- **Laravel 10** - PHP framework
+- **Laravel Sanctum** - API authentication
+- **MySQL** - Database
+- **Eloquent ORM** - Database management
 
-### API Endpoints
-- POST /api/auth/login
-- POST /api/auth/forgot
-- POST /api/auth/verify-reset-code
-- POST /api/auth/reset
-- GET  /api/auth/user (auth:sanctum)
-- POST /api/auth/logout (auth:sanctum)
-- GET  /api/dashboard/data (auth:sanctum + role:system_admin|hr_manager)
+### Frontend
+- **Vue 3** - JavaScript framework
+- **Vue Router** - Client-side routing
+- **Axios** - HTTP client
+- **Tailwind CSS** - Utility-first CSS framework
 
-### Notes
-- Logs recorded in `user_logs` for login/logout/forgot/reset (incl. failures).
-- Reset code expires in 30 minutes.
+## 📋 Prerequisites
 
-## Learning Laravel
+- PHP 8.1 or higher
+- Composer
+- Node.js 16+ and npm
+- MySQL 5.7+ or MariaDB 10.3+
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 🚀 Installation
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/rdhafiz/HRMS
+   cd HRMS
+   ```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
 
-## Laravel Sponsors
+3. **Environment setup**
+   ```bash
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+4. **Database configuration**
+   - Update `.env` with your database credentials
+   - Run migrations and seeders
+   ```bash
+   php artisan migrate --seed
+   ```
 
-### Premium Partners
+5. **Install Node.js dependencies**
+   ```bash
+   npm install
+   ```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+6. **Build assets**
+   ```bash
+   npm run dev
+   # or for production
+   npm run build
+   ```
 
-## Contributing
+7. **Start the development server**
+   ```bash
+   php artisan serve
+   ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+8. **Create storage link (for file uploads)**
+   ```bash
+   php artisan storage:link
+   ```
 
-## Code of Conduct
+## 🔐 Default Login Credentials
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+The system comes with a seeded admin user:
+- **Email:** admin@example.com
+- **Password:** password123
+- **Role:** System Admin
 
-## Security Vulnerabilities
+## 📚 API Documentation
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Authentication Endpoints
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/user` - Get current user
+- `POST /api/auth/forgot` - Request password reset
+- `POST /api/auth/verify-reset-code` - Verify reset code
+- `POST /api/auth/reset` - Reset password
 
-## License
+### Employee Management
+- `GET /api/employment/employees` - List employees
+- `POST /api/employment/employees` - Create employee
+- `GET /api/employment/employees/{id}` - Get employee
+- `PUT /api/employment/employees/{id}` - Update employee
+- `DELETE /api/employment/employees/{id}` - Delete employee
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Department Management
+- `GET /api/employment/departments` - List departments
+- `POST /api/employment/departments` - Create department
+- `GET /api/employment/departments/{id}` - Get department
+- `PUT /api/employment/departments/{id}` - Update department
+- `DELETE /api/employment/departments/{id}` - Delete department
+
+### Designation Management
+- `GET /api/employment/designations` - List designations
+- `POST /api/employment/designations` - Create designation
+- `GET /api/employment/designations/{id}` - Get designation
+- `PUT /api/employment/designations/{id}` - Update designation
+- `DELETE /api/employment/designations/{id}` - Delete designation
+
+### Attendance Management
+- `GET /api/employment/attendance` - List attendance records
+- `POST /api/employment/attendance` - Create attendance record
+- `PUT /api/employment/attendance/{id}` - Update attendance record
+- `DELETE /api/employment/attendance/{id}` - Delete attendance record
+
+### Leave Management
+- `GET /api/employment/leave-requests` - List leave requests
+- `POST /api/employment/leave-requests` - Create leave request
+- `PUT /api/employment/leave-requests/{id}` - Update leave request
+- `POST /api/employment/leave-requests/{id}/decision` - Approve/reject leave
+- `DELETE /api/employment/leave-requests/{id}` - Delete leave request
+
+### Holiday Management
+- `GET /api/employment/holidays` - List holidays
+- `POST /api/employment/holidays` - Create holiday
+- `PUT /api/employment/holidays/{id}` - Update holiday
+- `DELETE /api/employment/holidays/{id}` - Delete holiday
+
+### Admin Management (System Admin only)
+- `GET /api/admins` - List admins
+- `POST /api/admins` - Create admin
+- `GET /api/admins/{id}` - Get admin
+- `POST /api/admins/{id}` - Update admin
+- `DELETE /api/admins/{id}` - Delete admin
+
+## 🎨 Frontend Routes
+
+### Public Routes
+- `/` - Login page
+- `/forgot` - Forgot password
+- `/reset` - Reset password
+
+### Protected Routes (Requires Authentication)
+- `/dashboard` - Dashboard
+- `/departments` - Department list
+- `/departments/create` - Create department
+- `/departments/:id/edit` - Edit department
+- `/designations` - Designation list
+- `/designations/create` - Create designation
+- `/designations/:id/edit` - Edit designation
+- `/employees` - Employee list
+- `/employees/create` - Create employee
+- `/employees/:id/edit` - Edit employee
+- `/employees/:id` - View employee
+- `/attendance/daily` - Daily attendance
+- `/attendance/leaves` - Leave requests
+- `/attendance/leaves/create` - Create leave request
+- `/attendance/leaves/:id/edit` - Edit leave request
+- `/attendance/holidays` - Holiday list
+- `/attendance/holidays/create` - Create holiday
+- `/attendance/holidays/:id/edit` - Edit holiday
+- `/admins` - Admin list (System Admin only)
+- `/admins/create` - Create admin (System Admin only)
+- `/admins/:id/edit` - Edit admin (System Admin only)
+
+## 🔒 Role-Based Access Control
+
+### System Admin (admin_type: 1)
+- Full access to all modules
+- Can create, edit, delete all records
+- Access to Admin Management module
+- Can manage other users
+
+### HR Manager (admin_type: 2)
+- Access to Employee Management
+- Access to Attendance Management
+- Access to Leave Management
+- Access to Holiday Management
+- Can create, edit, delete records in allowed modules
+- Cannot access Admin Management
+
+### Supervisor (admin_type: 3)
+- Read-only access to most modules
+- Can view employee information
+- Can view attendance records
+- Can view leave requests and holidays
+- Cannot create, edit, or delete any records
+- Cannot access Admin Management
+
+## 📁 Project Structure
+
+```
+hrm.ridwan/
+├── app/
+│   ├── Constants/
+│   │   ├── UserRoles.php
+│   │   ├── AttendanceStatus.php
+│   │   └── LeaveTypes.php
+│   ├── Http/Controllers/Api/
+│   │   ├── AdminController.php
+│   │   ├── AttendanceController.php
+│   │   ├── DepartmentController.php
+│   │   ├── DesignationController.php
+│   │   ├── EmployeeController.php
+│   │   ├── HolidayController.php
+│   │   └── LeaveRequestController.php
+│   └── Models/
+│       ├── Attendance.php
+│       ├── Department.php
+│       ├── Designation.php
+│       ├── Employee.php
+│       ├── Holiday.php
+│       ├── LeaveRequest.php
+│       ├── User.php
+│       └── UserLog.php
+├── database/migrations/
+│   ├── 2014_10_12_000000_create_users_table.php
+│   ├── 2025_09_08_020000_create_departments_table.php
+│   ├── 2025_09_08_020100_create_designations_table.php
+│   ├── 2025_09_08_030000_create_employees_table.php
+│   ├── 2025_09_08_040000_create_attendances_table.php
+│   ├── 2025_09_08_040100_create_leave_requests_table.php
+│   ├── 2025_09_08_040200_create_holidays_table.php
+│   └── 2025_09_08_050000_add_soft_deletes_to_users_table.php
+├── resources/js/
+│   ├── components/
+│   │   ├── Header.vue
+│   │   ├── NavBar.vue
+│   │   └── SideNav.vue
+│   ├── layouts/
+│   │   ├── AuthLayout.vue
+│   │   └── DashboardLayout.vue
+│   ├── pages/
+│   │   ├── Admins/
+│   │   │   ├── Admins.vue
+│   │   │   └── AdminForm.vue
+│   │   ├── Attendance/
+│   │   │   ├── DailyAttendance.vue
+│   │   │   ├── LeaveRequests.vue
+│   │   │   ├── LeaveRequestForm.vue
+│   │   │   ├── Holidays.vue
+│   │   │   └── HolidayForm.vue
+│   │   ├── Auth/
+│   │   │   ├── Login.vue
+│   │   │   ├── ForgotPassword.vue
+│   │   │   └── ResetPassword.vue
+│   │   ├── Dashboard/
+│   │   │   └── Dashboard.vue
+│   │   └── Employment/
+│   │       ├── Departments/
+│   │       │   ├── Departments.vue
+│   │       │   └── DepartmentForm.vue
+│   │       ├── Designations/
+│   │       │   ├── Designations.vue
+│   │       │   └── DesignationForm.vue
+│   │       └── Employees/
+│   │           ├── Employees.vue
+│   │           ├── EmployeeForm.vue
+│   │           └── EmployeeView.vue
+│   └── router/
+│       └── index.js
+└── routes/
+    ├── api.php
+    └── web.php
+```
+
+## 🎯 Key Features
+
+### User Experience
+- **Responsive Design** - Works on desktop, tablet, and mobile
+- **Smooth Animations** - Tailwind CSS transitions and Vue animations
+- **Intuitive Navigation** - Role-based sidebar with active state highlighting
+- **Real-time Feedback** - Form validation and success/error messages
+
+### Security
+- **CSRF Protection** - Laravel's built-in CSRF protection
+- **XSS Protection** - Input sanitization and output escaping
+- **SQL Injection Prevention** - Eloquent ORM with parameterized queries
+- **Role-based Access** - Frontend and backend permission checks
+
+### Performance
+- **Lazy Loading** - Components loaded on demand
+- **Efficient Queries** - Eager loading to prevent N+1 queries
+- **Caching** - User data caching in frontend
+- **Optimized Assets** - Vite for fast development and optimized builds
+
+## 🔧 Configuration
+
+### Environment Variables
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=hrm_system
+DB_USERNAME=root
+DB_PASSWORD=
+
+SESSION_DRIVER=cookie
+SESSION_LIFETIME=120
+SESSION_DOMAIN=localhost
+SANCTUM_STATEFUL_DOMAINS=localhost:3000,localhost:5173
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+```
+
+### File Storage
+- Avatar uploads are stored in `storage/app/public/avatars`
+- Run `php artisan storage:link` to create symbolic link
+
+## 🧪 Testing
+
+```bash
+# Run PHP tests
+php artisan test
+
+# Run specific test suite
+php artisan test --testsuite=Feature
+```
+
+## 📝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## 🤝 Support
+
+For support, email support@example.com or create an issue in the repository.
+
+---
+
+**Built with ❤️ using Laravel 10, Vue 3, and Tailwind CSS**
