@@ -1,0 +1,107 @@
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Api\DepartmentController;
+use App\Http\Controllers\Api\DesignationController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\LeaveRequestController;
+use App\Http\Controllers\Api\HolidayController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\EmployeeController;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+// Auth endpoints
+Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot', [PasswordResetController::class, 'sendResetCode']);
+    Route::post('/verify-reset-code', [PasswordResetController::class, 'verifyCode']);
+    Route::post('/reset', [PasswordResetController::class, 'reset']);
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/user', [AuthController::class, 'user']);
+        Route::post('/logout', [AuthController::class, 'logout']);
+    });
+});
+
+// Admins Management (System Admin only)
+Route::middleware(['auth:sanctum', 'role:system_admin'])->prefix('admins')->group(function () {
+    Route::get('/', [AdminController::class, 'index']);
+    Route::post('/', [AdminController::class, 'store']);
+    Route::get('/{admin}', [AdminController::class, 'show']);
+    Route::post('/{admin}', [AdminController::class, 'update']);
+    Route::delete('/{admin}', [AdminController::class, 'destroy']);
+});
+
+// Protected dashboard data with role-based access example
+Route::middleware(['auth:sanctum', 'role:system_admin|hr_manager'])
+    ->get('/dashboard/data', [DashboardController::class, 'index']);
+
+// Employment Management
+Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
+    // Departments
+    Route::get('departments', [DepartmentController::class, 'index']);
+    Route::get('departments/{department}', [DepartmentController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('departments', [DepartmentController::class, 'store']);
+        Route::put('departments/{department}', [DepartmentController::class, 'update']);
+        Route::delete('departments/{department}', [DepartmentController::class, 'destroy']);
+    });
+
+    // Designations
+    Route::get('designations', [DesignationController::class, 'index']);
+    Route::get('designations/{designation}', [DesignationController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('designations', [DesignationController::class, 'store']);
+        Route::put('designations/{designation}', [DesignationController::class, 'update']);
+        Route::delete('designations/{designation}', [DesignationController::class, 'destroy']);
+    });
+
+    // Employees
+    Route::get('employees', [EmployeeController::class, 'index']);
+    Route::get('employees/{employee}', [EmployeeController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('employees', [EmployeeController::class, 'store']);
+        Route::put('employees/{employee}', [EmployeeController::class, 'update']);
+        Route::delete('employees/{employee}', [EmployeeController::class, 'destroy']);
+    });
+
+    // Attendance Module
+    // Attendance
+    Route::get('attendance', [AttendanceController::class, 'index']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('attendance', [AttendanceController::class, 'store']);
+        Route::put('attendance/{attendance}', [AttendanceController::class, 'update']);
+        Route::delete('attendance/{attendance}', [AttendanceController::class, 'destroy']);
+    });
+
+    // Leave Requests
+    Route::get('leave-requests', [LeaveRequestController::class, 'index']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('leave-requests', [LeaveRequestController::class, 'store']);
+        Route::put('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'update']);
+        Route::post('leave-requests/{leaveRequest}/decision', [LeaveRequestController::class, 'approve']);
+        Route::delete('leave-requests/{leaveRequest}', [LeaveRequestController::class, 'destroy']);
+    });
+
+    // Holidays
+    Route::get('holidays', [HolidayController::class, 'index']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('holidays', [HolidayController::class, 'store']);
+        Route::put('holidays/{holiday}', [HolidayController::class, 'update']);
+        Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy']);
+    });
+});
