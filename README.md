@@ -111,6 +111,12 @@ The system comes with a seeded admin user:
 - `POST /api/auth/verify-reset-code` - Verify reset code
 - `POST /api/auth/reset` - Reset password
 
+### Profile Management (All authenticated admins)
+- `GET /api/auth/profile` - Get current user's profile and last login timestamp
+- `GET /api/auth/profile/logs?per_page=50&page=1` - Paginated activity logs (Action, Timestamp, IP)
+- `POST /api/auth/profile` - Update profile
+- `POST /api/auth/profile/change-password` - Change password
+
 ### Employee Management
 - `GET /api/employment/employees` - List employees
 - `POST /api/employment/employees` - Create employee
@@ -187,6 +193,11 @@ The system comes with a seeded admin user:
 - `/admins` - Admin list (System Admin only)
 - `/admins/create` - Create admin (System Admin only)
 - `/admins/:id/edit` - Edit admin (System Admin only)
+  
+#### Profile
+- `/profile` - Admin Profile (view own profile, last login, activity logs)
+- `/profile/update` - Update Profile (name, avatar)
+- `/profile/change-password` - Change own password
 
 ## 🔒 Role-Based Access Control
 
@@ -259,6 +270,10 @@ hrm.ridwan/
 │   │   ├── Admins/
 │   │   │   ├── Admins.vue
 │   │   │   └── AdminForm.vue
+│   │   ├── Profile/
+│   │   │   ├── AdminProfile.vue
+│   │   │   ├── UpdateProfile.vue
+│   │   │   └── ChangePassword.vue
 │   │   ├── Attendance/
 │   │   │   ├── DailyAttendance.vue
 │   │   │   ├── LeaveRequests.vue
@@ -336,6 +351,11 @@ MAIL_ENCRYPTION=tls
 ### File Storage
 - Avatar uploads are stored in `storage/app/public/avatars`
 - Run `php artisan storage:link` to create symbolic link
+
+### Validation Rules (Profile)
+- Name: required, string, max 255
+- Avatar: image, formats: jpg/jpeg/png/webp, max 2MB
+- Change password: current password must match; new password min 8 and must include letters, numbers, and symbols; `new_password_confirmation` must match; optional `logout=true` to force re-login
 
 ## 🧪 Testing
 

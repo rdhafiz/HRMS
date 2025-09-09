@@ -24,9 +24,7 @@
             </div>
           </div>
           <div class="py-1 text-sm">
-            <a href="#" class="block px-3 py-2 hover:bg-gray-50">Profile</a>
-            <a href="#" class="block px-3 py-2 hover:bg-gray-50">Change Password</a>
-            <a href="#" class="block px-3 py-2 hover:bg-gray-50">Settings</a>
+            <router-link to="/profile" class="block px-3 py-2 hover:bg-gray-50">Profile</router-link>
             <button @click="$emit('logout')" class="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
           </div>
         </div>

@@ -11,7 +11,10 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\SalaryStructureController;
+use App\Http\Controllers\Api\EmployeeSalaryStructureController;
 use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +37,12 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
+
+        // Profile
+        Route::get('/profile', [ProfileController::class, 'show']);
+        Route::get('/profile/logs', [ProfileController::class, 'logs']);
+        Route::post('/profile', [ProfileController::class, 'update']);
+        Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     });
 });
 
@@ -104,4 +113,15 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
         Route::put('holidays/{holiday}', [HolidayController::class, 'update']);
         Route::delete('holidays/{holiday}', [HolidayController::class, 'destroy']);
     });
+
+    // Payroll - Salary Structures
+    Route::get('salary-structures', [SalaryStructureController::class, 'index']);
+    Route::get('salary-structures/{salaryStructure}', [SalaryStructureController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('salary-structures', [SalaryStructureController::class, 'store']);
+        Route::put('salary-structures/{salaryStructure}', [SalaryStructureController::class, 'update']);
+        Route::delete('salary-structures/{salaryStructure}', [SalaryStructureController::class, 'destroy']);
+        Route::post('employee-salary-structures', [EmployeeSalaryStructureController::class, 'store']);
+    });
+    Route::get('employee-salary-structures/{employee}', [EmployeeSalaryStructureController::class, 'showByEmployee']);
 });
