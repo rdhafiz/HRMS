@@ -15,11 +15,21 @@
 			</div>
 			<div>
 				<label class="block text-sm font-medium">Start</label>
-				<input v-model="filters.start_date" type="date" class="border rounded px-3 py-2" />
+				<flat-pickr
+					v-model="filters.start_date"
+					:config="dateConfig"
+					placeholder="Select start date"
+					class="border rounded px-3 py-2"
+				/>
 			</div>
 			<div>
 				<label class="block text-sm font-medium">End</label>
-				<input v-model="filters.end_date" type="date" class="border rounded px-3 py-2" />
+				<flat-pickr
+					v-model="filters.end_date"
+					:config="{ ...dateConfig, minDate: filters.start_date }"
+					placeholder="Select end date"
+					class="border rounded px-3 py-2"
+				/>
 			</div>
 			<button @click="load" class="border px-3 py-2 rounded">Filter</button>
 		</div>
@@ -54,10 +64,22 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
+// Reusable date configuration
+const dateConfig = {
+	dateFormat: 'Y-m-d',
+	altFormat: 'M j, Y',
+	altInput: true,
+	allowInput: true,
+	clickOpens: true,
+	defaultDate: null
+}
 
 const items = ref([])
 const departments = ref([])
-const filters = ref({ department_id: null, start_date: '', end_date: '' })
+const filters = ref({ department_id: null, start_date: null, end_date: null })
 const me = ref(null)
 const canManage = computed(() => me.value?.admin_type === 1 || me.value?.admin_type === 2)
 

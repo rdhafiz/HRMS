@@ -25,7 +25,12 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium">Date of Birth</label>
-					<input v-model="form.date_of_birth" type="date" class="border rounded px-3 py-2 w-full" />
+					<flat-pickr
+						v-model="form.date_of_birth"
+						:config="{ ...dateConfig, maxDate: new Date() }"
+						placeholder="Select date of birth"
+						class="border rounded px-3 py-2 w-full"
+					/>
 					<p v-if="errors.date_of_birth" class="text-red-600 text-sm mt-1">{{ errors.date_of_birth[0] }}</p>
 				</div>
 				<div>
@@ -51,7 +56,12 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium">Join Date</label>
-					<input v-model="form.join_date" type="date" class="border rounded px-3 py-2 w-full" />
+					<flat-pickr
+						v-model="form.join_date"
+						:config="dateConfig"
+						placeholder="Select join date"
+						class="border rounded px-3 py-2 w-full"
+					/>
 					<p v-if="errors.join_date" class="text-red-600 text-sm mt-1">{{ errors.join_date[0] }}</p>
 				</div>
 				<div>
@@ -80,9 +90,24 @@
 					<p v-if="errors.status" class="text-red-600 text-sm mt-1">{{ errors.status[0] }}</p>
 				</div>
 				<div>
-					<label class="block text-sm font-medium">Salary</label>
-					<input v-model="form.salary" type="number" step="0.01" class="border rounded px-3 py-2 w-full" />
-					<p v-if="errors.salary" class="text-red-600 text-sm mt-1">{{ errors.salary[0] }}</p>
+					<label class="block text-sm font-medium">Salary Structure</label>
+					<select v-model="form.salary_structure_id" class="border rounded px-3 py-2 w-full">
+						<option :value="null">Select Salary Structure</option>
+						<option v-for="structure in salaryStructures" :key="structure.id" :value="structure.id">
+							{{ structure.name }}
+						</option>
+					</select>
+					<p v-if="errors.salary_structure_id" class="text-red-600 text-sm mt-1">{{ errors.salary_structure_id[0] }}</p>
+				</div>
+				<div>
+					<label class="block text-sm font-medium">Effective Date</label>
+					<flat-pickr
+						v-model="form.effective_date"
+						:config="{ ...dateConfig, minDate: form.join_date || new Date() }"
+						placeholder="Select effective date"
+						class="border rounded px-3 py-2 w-full"
+					/>
+					<p v-if="errors.effective_date" class="text-red-600 text-sm mt-1">{{ errors.effective_date[0] }}</p>
 				</div>
 			</div>
 
@@ -98,6 +123,18 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
+// Reusable date configuration
+const dateConfig = {
+	dateFormat: 'Y-m-d',
+	altFormat: 'M j, Y',
+	altInput: true,
+	allowInput: true,
+	clickOpens: true,
+	defaultDate: null
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -108,20 +145,22 @@ const form = ref({
 	last_name: '',
 	email: '',
 	phone: '',
-	date_of_birth: '',
+	date_of_birth: null,
 	gender: null,
 	address: '',
 
 	employee_code: '',
-	join_date: '',
+	join_date: null,
 	department_id: null,
 	designation_id: null,
 	status: 'active',
-	salary: null,
+	salary_structure_id: null,
+	effective_date: new Date().toISOString().slice(0, 10), // Default to today's date
 })
 const errors = ref({})
 const departments = ref([])
 const designations = ref([])
+const salaryStructures = ref([])
 
 const loadDepartments = async () => {
 	const { data } = await axios.get('/employment/departments')
@@ -133,6 +172,11 @@ const loadDesignations = async () => {
 	designations.value = data.data || data
 }
 
+const loadSalaryStructures = async () => {
+	const { data } = await axios.get('/employment/salary-structures?all=true')
+	salaryStructures.value = data
+}
+
 const loadEmployee = async () => {
 	if (!isEdit.value) return
 	const { data } = await axios.get(`/employment/employees/${route.params.id}`)
@@ -141,15 +185,16 @@ const loadEmployee = async () => {
 		last_name: data.last_name,
 		email: data.email,
 		phone: data.phone,
-		date_of_birth: data.date_of_birth,
+		date_of_birth: data.date_of_birth || null,
 		gender: data.gender,
 		address: data.address,
 		employee_code: data.employee_code,
-		join_date: data.join_date,
+		join_date: data.join_date || null,
 		department_id: data.department_id,
 		designation_id: data.designation_id,
 		status: data.status,
-		salary: data.salary,
+		salary_structure_id: data.current_salary_structure?.structure?.id || null,
+		effective_date: data.current_salary_structure?.effective_date || new Date().toISOString().slice(0, 10),
 	}
 }
 
@@ -174,6 +219,6 @@ watch(() => form.value.department_id, async () => {
 })
 
 onMounted(async () => {
-	await Promise.all([loadDepartments(), loadDesignations(), loadEmployee()])
+	await Promise.all([loadDepartments(), loadDesignations(), loadSalaryStructures(), loadEmployee()])
 })
 </script>

@@ -15,6 +15,8 @@ class SalaryStructureController extends Controller
 	{
 		$q = $request->query('q');
 		$isTemplate = $request->query('is_template');
+		$all = $request->query('all', false); // For dropdown usage
+		
 		$query = SalaryStructure::query()->with('components');
 		if ($q) {
 			$query->where('name', 'like', "%{$q}%");
@@ -22,6 +24,11 @@ class SalaryStructureController extends Controller
 		if (!is_null($isTemplate)) {
 			$query->where('is_template', filter_var($isTemplate, FILTER_VALIDATE_BOOLEAN));
 		}
+		
+		if ($all) {
+			return $query->orderBy('name')->get();
+		}
+		
 		return $query->orderBy('name')->paginate(10);
 	}
 
