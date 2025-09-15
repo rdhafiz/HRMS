@@ -358,17 +358,16 @@ const viewPaySlip = (payslip) => {
 const downloadPaySlip = async (payslip) => {
 	try {
 		const response = await axios.get(`/employment/pay-slips/${payslip.id}/download`, {
-			responseType: 'blob'
+			responseType: 'json'
 		})
 		
-		const url = window.URL.createObjectURL(new Blob([response.data]))
+		// const url = window.URL.createObjectURL(new Blob([response.data]))
 		const link = document.createElement('a')
-		link.href = url
-		link.setAttribute('download', `payslip_${payslip.employee.employee_code}_${payslip.period_label.replace(/\s+/g, '_')}.pdf`)
+		link.href = response.data.pdf
+		link.setAttribute('download', response.data.name)
 		document.body.appendChild(link)
 		link.click()
 		link.remove()
-		window.URL.revokeObjectURL(url)
 	} catch (error) {
 		console.error('Failed to download pay slip:', error)
 		alert('Failed to download pay slip')

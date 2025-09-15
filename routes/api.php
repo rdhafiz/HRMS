@@ -142,6 +142,7 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
         Route::post('pay-slips', [PaySlipController::class, 'store']);
         Route::post('pay-slips/generate-batch', [PaySlipController::class, 'generateBatch']);
         Route::put('pay-slips/{paySlip}/status', [PaySlipController::class, 'updateStatus']);
+        Route::post('pay-slips/{paySlip}/regenerate', [PaySlipController::class, 'regenerate']);
     });
     Route::get('pay-slips/{paySlip}', [PaySlipController::class, 'show']);
 });

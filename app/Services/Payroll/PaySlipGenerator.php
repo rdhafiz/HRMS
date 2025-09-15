@@ -27,14 +27,19 @@ class PaySlipGenerator
         }
 
         // Get basic salary (with override if provided)
-        $basic = $overrides['basic'] ?? $salaryStructure->basic_salary;
+        $basicComponent = 0;
+        foreach ($salaryStructure->components as $component) {
+            if ($component->type === 'basic') {
+                $basicComponent = $component->amount;
+            }
+        }
+        $basic = $overrides['basic'] ?? $basicComponent;
 
         // Get allowances (merge structure allowances with overrides)
         $structureAllowances = $salaryStructure->components()
             ->where('type', 'allowance')
             ->pluck('amount', 'name')
             ->toArray();
-
         $allowances = array_merge($structureAllowances, $overrides['allowances'] ?? []);
 
         // Get deductions (merge structure deductions with overrides)
@@ -42,7 +47,6 @@ class PaySlipGenerator
             ->where('type', 'deduction')
             ->pluck('amount', 'name')
             ->toArray();
-
         $deductions = array_merge($structureDeductions, $overrides['deductions'] ?? []);
 
         // Calculate gross salary

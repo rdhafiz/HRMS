@@ -29,7 +29,7 @@ class PdfGenerator
             ]);
 
             // Configure PDF options
-            $pdf->setPaper('A4', 'portrait');
+            // $pdf->setPaper('A4', 'portrait');
             $pdf->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
@@ -43,7 +43,7 @@ class PdfGenerator
             $filePath = "pay_slips/{$year}/{$month}/{$fileName}";
 
             // Ensure directory exists
-            $fullPath = storage_path("app/{$filePath}");
+            $fullPath = storage_path("app/public/{$filePath}");
             $directory = dirname($fullPath);
             if (!is_dir($directory)) {
                 mkdir($directory, 0755, true);

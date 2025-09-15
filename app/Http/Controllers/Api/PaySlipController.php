@@ -173,12 +173,12 @@ class PaySlipController extends Controller
         $pdfGenerator = new PdfGenerator();
         
         // Generate PDF if it doesn't exist
-        if (!$paySlip->pdf_path || !Storage::exists($paySlip->pdf_path)) {
+        if (!$paySlip->pdf_path || !Storage::disk('public')->exists($paySlip->pdf_path)) {
             $pdfGenerator->generatePaySlipPdf($paySlip);
             $paySlip->refresh();
         }
 
-        if (!$paySlip->pdf_path || !Storage::exists($paySlip->pdf_path)) {
+        if (!$paySlip->pdf_path || !Storage::disk('public')->exists($paySlip->pdf_path)) {
             return response()->json(['error' => 'PDF not available'], 404);
         }
 
@@ -193,7 +193,7 @@ class PaySlipController extends Controller
             ],
         ]);
 
-        return Storage::download($paySlip->pdf_path);
+        return response()->json(['pdf' => asset('storage/'.$paySlip->pdf_path), 'name' => $paySlip->employee->employee_code.'_'.preg_replace('/[^a-zA-Z0-9]/', '_', $paySlip->period_label).'.pdf'], 200);
     }
 
     /**
@@ -215,6 +215,12 @@ class PaySlipController extends Controller
                 'status' => $request->status,
                 'paid_at' => $request->status === 'Paid' ? now() : null,
             ]);
+
+            if($request->status === 'Paid'){
+                $paySlip->update([
+                    'pdf_path' => null
+                ]);
+            }
 
             UserLog::create([
                 'user_id' => auth()->id(),
@@ -257,6 +263,112 @@ class PaySlipController extends Controller
         $employees = $query->where('status', 'active')->get();
 
         return response()->json($employees);
+    }
+
+    /**
+     * Regenerate an existing pay slip with current salary structure.
+     */
+    public function regenerate(PaySlip $paySlip): JsonResponse
+    {
+        try {
+            // Check if pay slip is paid and prevent regeneration unless explicitly allowed
+            if ($paySlip->isPaid()) {
+                return response()->json([
+                    'error' => 'Cannot regenerate paid pay slip. Please contact system administrator if this is required.'
+                ], 403);
+            }
+
+            // Load employee with current salary structure
+            $employee = Employee::with('currentSalaryStructure.structure')->find($paySlip->employee_id);
+            if (!$employee) {
+                return response()->json(['error' => 'Employee not found'], 404);
+            }
+
+            // Check if employee has current salary structure
+            $currentSalaryStructure = $employee->currentSalaryStructure?->structure;
+            if (!$currentSalaryStructure) {
+                return response()->json([
+                    'error' => 'Employee does not have an assigned salary structure'
+                ], 400);
+            }
+            
+
+            // Store previous calculation data for history
+            $previousCalculation = [
+                'basic' => $paySlip->basic,
+                'allowances' => $paySlip->allowances,
+                'deductions' => $paySlip->deductions,
+                'gross_salary' => $paySlip->gross_salary,
+                'net_salary' => $paySlip->net_salary,
+                'salary_structure_id' => $paySlip->salary_structure_id,
+                'regenerated_at' => now()->toISOString(),
+            ];
+
+            // Generate new pay slip data using current salary structure
+            $newPaySlipData = $this->paySlipGenerator->generatePaySlipData(
+                $employee, 
+                $currentSalaryStructure, 
+                $paySlip->meta['overrides'] ?? []
+            );
+
+            // Update the pay slip with new calculation
+            $paySlip->update([
+                'salary_structure_id' => $currentSalaryStructure->id,
+                'basic' => $newPaySlipData['basic'],
+                'allowances' => $newPaySlipData['allowances'],
+                'deductions' => $newPaySlipData['deductions'],
+                'gross_salary' => $newPaySlipData['gross_salary'],
+                'net_salary' => $newPaySlipData['net_salary'],
+                'generated_at' => now(),
+                'generated_by' => auth()->id(),
+                'meta' => array_merge($paySlip->meta ?? [], [
+                    'previous_calculation' => $previousCalculation,
+                    'regenerated_at' => now()->toISOString(),
+                    'regenerated_by' => auth()->id(),
+                ]),
+            ]);
+
+            // Regenerate PDF if it exists
+            $pdfGenerator = new PdfGenerator();
+            $pdfPath = $pdfGenerator->regeneratePaySlipPdf($paySlip);
+
+            // Log the regeneration action
+            UserLog::create([
+                'user_id' => auth()->id(),
+                'type' => 'payslip_regenerate',
+                'metadata' => [
+                    'pay_slip_id' => $paySlip->id,
+                    'employee_id' => $paySlip->employee_id,
+                    'previous_calculation' => $previousCalculation,
+                    'new_calculation' => $newPaySlipData,
+                    'pdf_regenerated' => $pdfPath ? true : false,
+                    'regenerated_at' => now()->toISOString(),
+                ],
+            ]);
+
+            return response()->json([
+                'message' => 'Pay slip regenerated successfully',
+                'pay_slip' => $paySlip->load(['employee.department', 'salaryStructure', 'generator']),
+                'pdf_regenerated' => $pdfPath ? true : false,
+                'changes' => [
+                    'basic' => [
+                        'old' => $previousCalculation['basic'],
+                        'new' => $newPaySlipData['basic'],
+                    ],
+                    'gross_salary' => [
+                        'old' => $previousCalculation['gross_salary'],
+                        'new' => $newPaySlipData['gross_salary'],
+                    ],
+                    'net_salary' => [
+                        'old' => $previousCalculation['net_salary'],
+                        'new' => $newPaySlipData['net_salary'],
+                    ],
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**

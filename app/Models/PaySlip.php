@@ -46,6 +46,11 @@ class PaySlip extends Model
         'net_salary' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'total_allowances',
+        'total_deductions'
+    ];
+
     /**
      * Get the employee that owns the pay slip.
      */
