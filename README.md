@@ -164,6 +164,16 @@ The system comes with a seeded admin user:
 - `POST /api/admins/{id}` - Update admin
 - `DELETE /api/admins/{id}` - Delete admin
 
+### Branding (System Admin only)
+- `GET /api/branding` - Fetch current branding and SEO settings
+- `POST /api/branding` - Update branding and SEO settings
+  - Body (multipart):
+    - `site_logo` (image: jpg/png/webp, max 2MB)
+    - `site_favicon` (image: jpg/png/webp/ico, max 2MB)
+    - `meta_title` (string)
+    - `meta_description` (string)
+    - `meta_keywords` (string)
+
 ## 🎨 Frontend Routes
 
 ### Public Routes
@@ -193,6 +203,9 @@ The system comes with a seeded admin user:
 - `/admins` - Admin list (System Admin only)
 - `/admins/create` - Create admin (System Admin only)
 - `/admins/:id/edit` - Edit admin (System Admin only)
+  
+#### Settings
+- `/branding` - Branding & SEO (System Admin only)
   
 #### Profile
 - `/profile` - Admin Profile (view own profile, last login, activity logs)
@@ -274,6 +287,8 @@ hrm.ridwan/
 │   │   │   ├── AdminProfile.vue
 │   │   │   ├── UpdateProfile.vue
 │   │   │   └── ChangePassword.vue
+│   │   ├── Profile/
+│   │   │   └── BrandingPage.vue
 │   │   ├── Attendance/
 │   │   │   ├── DailyAttendance.vue
 │   │   │   ├── LeaveRequests.vue

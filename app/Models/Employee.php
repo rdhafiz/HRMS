@@ -23,14 +23,12 @@ class Employee extends Model
 		'department_id',
 		'designation_id',
 		'status',
-		'salary',
 		'created_by',
 	];
 
 	protected $casts = [
 		'date_of_birth' => 'date',
 		'join_date' => 'date',
-		'salary' => 'decimal:2',
 	];
 
 	public function department()
@@ -46,6 +44,16 @@ class Employee extends Model
 	public function creator()
 	{
 		return $this->belongsTo(User::class, 'created_by');
+	}
+
+	public function salaryStructures()
+	{
+		return $this->hasMany(EmployeeSalaryStructure::class);
+	}
+
+	public function currentSalaryStructure()
+	{
+		return $this->hasOne(EmployeeSalaryStructure::class)->latest('effective_date');
 	}
 
 	public function getNameAttribute(): string

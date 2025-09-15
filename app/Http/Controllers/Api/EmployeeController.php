@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\EmployeeSalaryStructure;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
@@ -50,28 +52,51 @@ class EmployeeController extends Controller
 			'department_id' => ['required', 'exists:departments,id'],
 			'designation_id' => ['required', 'exists:designations,id'],
 			'status' => ['nullable', Rule::in(['active', 'inactive', 'terminated'])],
-			'salary' => ['nullable', 'numeric'],
+			
+			// Salary structure fields
+			'salary_structure_id' => ['required', 'exists:salary_structures,id'],
+			'effective_date' => ['required', 'date'],
 		]);
 
-		$employee = Employee::create(array_merge($validated, [
-			'created_by' => $request->user()->id,
-			'status' => $validated['status'] ?? 'active',
-		]));
+		return DB::transaction(function () use ($request, $validated) {
+			$employee = Employee::create([
+				'first_name' => $validated['first_name'],
+				'last_name' => $validated['last_name'],
+				'email' => $validated['email'],
+				'phone' => $validated['phone'],
+				'date_of_birth' => $validated['date_of_birth'],
+				'gender' => $validated['gender'],
+				'address' => $validated['address'],
+				'employee_code' => $validated['employee_code'],
+				'join_date' => $validated['join_date'],
+				'department_id' => $validated['department_id'],
+				'designation_id' => $validated['designation_id'],
+				'status' => $validated['status'] ?? 'active',
+				'created_by' => $request->user()->id,
+			]);
 
-		UserLog::create([
-			'user_id' => $request->user()->id,
-			'type' => 'employee_create',
-			'ip' => $request->ip(),
-			'user_agent' => (string) $request->userAgent(),
-			'meta' => ['employee_id' => $employee->id],
-		]);
+			// Assign salary structure
+			EmployeeSalaryStructure::create([
+				'employee_id' => $employee->id,
+				'salary_structure_id' => $validated['salary_structure_id'],
+				'effective_date' => $validated['effective_date'],
+			]);
 
-		return response()->json($employee->load(['department', 'designation']), 201);
+			UserLog::create([
+				'user_id' => $request->user()->id,
+				'type' => 'employee_create',
+				'ip' => $request->ip(),
+				'user_agent' => (string) $request->userAgent(),
+				'meta' => ['employee_id' => $employee->id],
+			]);
+
+			return response()->json($employee->load(['department', 'designation', 'currentSalaryStructure.structure.components']), 201);
+		});
 	}
 
 	public function show(Employee $employee)
 	{
-		return $employee->load(['department', 'designation']);
+		return $employee->load(['department', 'designation', 'currentSalaryStructure.structure.components']);
 	}
 
 	public function update(Request $request, Employee $employee)
@@ -90,20 +115,53 @@ class EmployeeController extends Controller
 			'department_id' => ['required', 'exists:departments,id'],
 			'designation_id' => ['required', 'exists:designations,id'],
 			'status' => ['nullable', Rule::in(['active', 'inactive', 'terminated'])],
-			'salary' => ['nullable', 'numeric'],
+			
+			// Salary structure fields
+			'salary_structure_id' => ['required', 'exists:salary_structures,id'],
+			'effective_date' => ['required', 'date'],
 		]);
 
-		$employee->update($validated);
+		return DB::transaction(function () use ($request, $employee, $validated) {
+			$employee->update([
+				'first_name' => $validated['first_name'],
+				'last_name' => $validated['last_name'],
+				'email' => $validated['email'],
+				'phone' => $validated['phone'],
+				'date_of_birth' => $validated['date_of_birth'],
+				'gender' => $validated['gender'],
+				'address' => $validated['address'],
+				'employee_code' => $validated['employee_code'],
+				'join_date' => $validated['join_date'],
+				'department_id' => $validated['department_id'],
+				'designation_id' => $validated['designation_id'],
+				'status' => $validated['status'] ?? 'active',
+			]);
 
-		UserLog::create([
-			'user_id' => $request->user()->id,
-			'type' => 'employee_update',
-			'ip' => $request->ip(),
-			'user_agent' => (string) $request->userAgent(),
-			'meta' => ['employee_id' => $employee->id],
-		]);
+			// Update or create salary structure assignment
+			$currentSalaryStructure = $employee->currentSalaryStructure;
+			if ($currentSalaryStructure && 
+				$currentSalaryStructure->salary_structure_id == $validated['salary_structure_id'] &&
+				$currentSalaryStructure->effective_date == $validated['effective_date']) {
+				// No change needed
+			} else {
+				// Create new salary structure assignment
+				EmployeeSalaryStructure::create([
+					'employee_id' => $employee->id,
+					'salary_structure_id' => $validated['salary_structure_id'],
+					'effective_date' => $validated['effective_date'],
+				]);
+			}
 
-		return response()->json($employee->load(['department', 'designation']));
+			UserLog::create([
+				'user_id' => $request->user()->id,
+				'type' => 'employee_update',
+				'ip' => $request->ip(),
+				'user_agent' => (string) $request->userAgent(),
+				'meta' => ['employee_id' => $employee->id],
+			]);
+
+			return response()->json($employee->load(['department', 'designation', 'currentSalaryStructure.structure.components']));
+		});
 	}
 
 	public function destroy(Request $request, Employee $employee)

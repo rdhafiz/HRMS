@@ -23,11 +23,14 @@ import SalaryStructures from '../pages/Payroll/SalaryStructures.vue'
 import SalaryStructureForm from '../pages/Payroll/SalaryStructureForm.vue'
 import AssignSalaryStructure from '../pages/Payroll/AssignSalaryStructure.vue'
 import EmployeeSalaryView from '../pages/Payroll/EmployeeSalaryView.vue'
+import GeneratePaySlips from '../pages/payroll/GeneratePaySlips.vue'
+import PaySlipHistory from '../pages/payroll/PaySlipHistory.vue'
 import Admins from '../pages/Admins/Admins.vue'
 import AdminForm from '../pages/Admins/AdminForm.vue'
 import AdminProfile from '../pages/Profile/AdminProfile.vue'
 import UpdateProfile from '../pages/Profile/UpdateProfile.vue'
 import ChangePassword from '../pages/Profile/ChangePassword.vue'
+import BrandingPage from '../pages/Profile/BrandingPage.vue'
 
 axios.defaults.withCredentials = true
 axios.defaults.baseURL = '/api'
@@ -85,10 +88,15 @@ const routes = [
       { path: 'payroll/salary-structures/:id/edit', name: 'payroll.structures.edit', component: SalaryStructureForm, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id/assign-salary', name: 'employees.assignSalary', component: AssignSalaryStructure, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id/salary', name: 'employees.salary', component: EmployeeSalaryView, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Payroll - Pay Slips
+      { path: 'payroll/payslips/generate', name: 'payroll.generate', component: GeneratePaySlips, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
+      { path: 'payroll/payslips', name: 'payroll.payslips', component: PaySlipHistory, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       // Profile
       { path: 'profile', name: 'profile', component: AdminProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/update', name: 'profile.update', component: UpdateProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/change-password', name: 'profile.password', component: ChangePassword, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Settings - Branding (System Admin only)
+      { path: 'branding', name: 'branding', component: BrandingPage, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN'] } },
     ],
   },
 ]
