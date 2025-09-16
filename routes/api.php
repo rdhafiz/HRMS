@@ -15,6 +15,8 @@ use App\Http\Controllers\Api\SalaryStructureController;
 use App\Http\Controllers\Api\EmployeeSalaryStructureController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\BrandingController;
+use App\Http\Controllers\Api\PaySlipController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +55,12 @@ Route::middleware(['auth:sanctum', 'role:system_admin'])->prefix('admins')->grou
     Route::get('/{admin}', [AdminController::class, 'show']);
     Route::post('/{admin}', [AdminController::class, 'update']);
     Route::delete('/{admin}', [AdminController::class, 'destroy']);
+});
+
+// Branding (System Admin only)
+Route::middleware(['auth:sanctum', 'role:system_admin'])->group(function () {
+    Route::get('/branding', [BrandingController::class, 'show']);
+    Route::post('/branding', [BrandingController::class, 'update']);
 });
 
 // Protected dashboard data with role-based access example
@@ -124,4 +132,17 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
         Route::post('employee-salary-structures', [EmployeeSalaryStructureController::class, 'store']);
     });
     Route::get('employee-salary-structures/{employee}', [EmployeeSalaryStructureController::class, 'showByEmployee']);
+    Route::get('employee-salary-structures/{employee}/history', [EmployeeSalaryStructureController::class, 'history']);
+
+    // Payroll - Pay Slips
+    Route::get('pay-slips', [PaySlipController::class, 'index']);
+    Route::get('pay-slips/employees', [PaySlipController::class, 'getEmployees']);
+    Route::get('pay-slips/{paySlip}/download', [PaySlipController::class, 'download']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('pay-slips', [PaySlipController::class, 'store']);
+        Route::post('pay-slips/generate-batch', [PaySlipController::class, 'generateBatch']);
+        Route::put('pay-slips/{paySlip}/status', [PaySlipController::class, 'updateStatus']);
+        Route::post('pay-slips/{paySlip}/regenerate', [PaySlipController::class, 'regenerate']);
+    });
+    Route::get('pay-slips/{paySlip}', [PaySlipController::class, 'show']);
 });

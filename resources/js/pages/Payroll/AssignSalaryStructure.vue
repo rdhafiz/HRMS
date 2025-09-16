@@ -13,7 +13,12 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium">Effective Date</label>
-					<input v-model="form.effective_date" type="date" class="border rounded px-3 py-2 w-full" />
+					<flat-pickr
+						v-model="form.effective_date"
+						:config="{ ...dateConfig, minDate: new Date() }"
+						placeholder="Select effective date"
+						class="border rounded px-3 py-2 w-full"
+					/>
 					<p v-if="errors.effective_date" class="text-red-600 text-sm mt-1">{{ errors.effective_date[0] }}</p>
 				</div>
 			</div>
@@ -35,6 +40,18 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
+// Reusable date configuration
+const dateConfig = {
+	dateFormat: 'Y-m-d',
+	altFormat: 'M j, Y',
+	altInput: true,
+	allowInput: true,
+	clickOpens: true,
+	defaultDate: null
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -44,6 +61,7 @@ const customText = ref('')
 const errors = ref({})
 
 const form = ref({ employee_id: employeeId, salary_structure_id: null, effective_date: new Date().toISOString().slice(0,10) })
+
 
 const loadTemplates = async () => {
 	const { data } = await axios.get('/employment/salary-structures', { params: { is_template: true } })

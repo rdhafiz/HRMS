@@ -22,7 +22,8 @@
 				<p><span class="text-gray-600">Department:</span> {{ emp.department?.name }}</p>
 				<p><span class="text-gray-600">Designation:</span> {{ emp.designation?.name }}</p>
 				<p><span class="text-gray-600">Status:</span> {{ emp.status }}</p>
-				<p><span class="text-gray-600">Salary:</span> {{ emp.salary ?? '-' }}</p>
+				<p><span class="text-gray-600">Salary Structure:</span> {{ emp.current_salary_structure?.structure?.name ?? '-' }}</p>
+				<p><span class="text-gray-600">Effective Date:</span> {{ emp.current_salary_structure?.effective_date ?? '-' }}</p>
 			</div>
 		</div>
 

@@ -1,6 +1,6 @@
 # HRM System (Laravel 10 + Vue 3 + Sanctum)
 
-A comprehensive Human Resource Management system built with Laravel 10, Vue 3, and Laravel Sanctum. Features role-based access control, employee management, attendance tracking, leave management, and admin management.
+A comprehensive Human Resource Management system built with Laravel 10, Vue 3, and Laravel Sanctum. Features role-based access control, employee management, attendance tracking, leave management, complete payroll system with pay slip generation and regeneration, and admin management.
 
 ## 🚀 Features
 
@@ -10,6 +10,7 @@ A comprehensive Human Resource Management system built with Laravel 10, Vue 3, a
 - **Attendance Management** - Daily attendance tracking with check-in/out times
 - **Leave Management** - Leave request system with approval workflow
 - **Holiday Management** - Company holiday calendar
+- **Payroll System** - Complete salary management with pay slip generation
 - **Admin Management** - User administration (System Admin only)
 
 ### Role-Based Access Control
@@ -157,12 +158,62 @@ The system comes with a seeded admin user:
 - `PUT /api/employment/holidays/{id}` - Update holiday
 - `DELETE /api/employment/holidays/{id}` - Delete holiday
 
+### Payroll Management
+- `GET /api/employment/salary-structures` - List salary structures
+- `POST /api/employment/salary-structures` - Create salary structure
+- `GET /api/employment/salary-structures/{id}` - Get salary structure
+- `PUT /api/employment/salary-structures/{id}` - Update salary structure
+- `DELETE /api/employment/salary-structures/{id}` - Delete salary structure
+- `POST /api/employment/employee-salary-structures` - Assign salary structure to employee
+- `GET /api/employment/employee-salary-structures/{employee}` - Get employee's salary structure
+- `GET /api/employment/employee-salary-structures/{employee}/history` - Get salary history
+
+### Pay Slip Management
+- `GET /api/employment/pay-slips` - List pay slips
+- `POST /api/employment/pay-slips` - Generate single pay slip
+- `POST /api/employment/pay-slips/generate-batch` - Generate batch pay slips
+- `GET /api/employment/pay-slips/{id}` - Get pay slip details
+- `GET /api/employment/pay-slips/{id}/download` - Download pay slip PDF
+- `POST /api/employment/pay-slips/{id}/regenerate` - Regenerate pay slip with current salary structure
+- `PUT /api/employment/pay-slips/{id}/status` - Update pay slip status (Pending/Paid)
+- `GET /api/employment/pay-slips/employees` - Get employees for pay slip generation
+
+#### Pay Slip Regenerate API Details
+The regenerate endpoint allows System Administrators and HR Managers to recalculate existing pay slips using the employee's current salary structure:
+
+**Endpoint:** `POST /api/employment/pay-slips/{id}/regenerate`
+
+**Features:**
+- Recalculates all salary fields (basic, allowances, deductions, gross_salary, net_salary)
+- Uses employee's current salary structure for accurate calculations
+- Preserves original overrides from meta field
+- Stores previous calculation data for audit trail
+- Automatically regenerates PDF if it exists
+- Prevents regeneration of paid pay slips (returns 403 error)
+- Logs all regeneration actions in UserLog table
+
+**Response includes:**
+- Updated pay slip data with related employee and salary structure info
+- Comparison of old vs new values for key fields
+- PDF regeneration status
+- Detailed change tracking for audit purposes
+
 ### Admin Management (System Admin only)
 - `GET /api/admins` - List admins
 - `POST /api/admins` - Create admin
 - `GET /api/admins/{id}` - Get admin
 - `POST /api/admins/{id}` - Update admin
 - `DELETE /api/admins/{id}` - Delete admin
+
+### Branding (System Admin only)
+- `GET /api/branding` - Fetch current branding and SEO settings
+- `POST /api/branding` - Update branding and SEO settings
+  - Body (multipart):
+    - `site_logo` (image: jpg/png/webp, max 2MB)
+    - `site_favicon` (image: jpg/png/webp/ico, max 2MB)
+    - `meta_title` (string)
+    - `meta_description` (string)
+    - `meta_keywords` (string)
 
 ## 🎨 Frontend Routes
 
@@ -190,9 +241,18 @@ The system comes with a seeded admin user:
 - `/attendance/holidays` - Holiday list
 - `/attendance/holidays/create` - Create holiday
 - `/attendance/holidays/:id/edit` - Edit holiday
+- `/payroll/salary-structures` - Salary structures list
+- `/payroll/salary-structures/create` - Create salary structure
+- `/payroll/salary-structures/:id/edit` - Edit salary structure
+- `/payroll/pay-slips` - Pay slips list
+- `/payroll/pay-slips/generate` - Generate pay slips
+- `/payroll/pay-slips/:id` - View pay slip details
 - `/admins` - Admin list (System Admin only)
 - `/admins/create` - Create admin (System Admin only)
 - `/admins/:id/edit` - Edit admin (System Admin only)
+  
+#### Settings
+- `/branding` - Branding & SEO (System Admin only)
   
 #### Profile
 - `/profile` - Admin Profile (view own profile, last login, activity logs)
@@ -212,6 +272,7 @@ The system comes with a seeded admin user:
 - Access to Attendance Management
 - Access to Leave Management
 - Access to Holiday Management
+- Access to Payroll Management (Salary Structures, Pay Slips)
 - Can create, edit, delete records in allowed modules
 - Cannot access Admin Management
 
@@ -220,8 +281,9 @@ The system comes with a seeded admin user:
 - Can view employee information
 - Can view attendance records
 - Can view leave requests and holidays
+- Can view pay slips (read-only)
 - Cannot create, edit, or delete any records
-- Cannot access Admin Management
+- Cannot access Admin Management or Payroll Management
 
 ## 📁 Project Structure
 
@@ -235,29 +297,55 @@ hrm.ridwan/
 │   ├── Http/Controllers/Api/
 │   │   ├── AdminController.php
 │   │   ├── AttendanceController.php
+│   │   ├── BrandingController.php
 │   │   ├── DepartmentController.php
 │   │   ├── DesignationController.php
 │   │   ├── EmployeeController.php
+│   │   ├── EmployeeSalaryStructureController.php
 │   │   ├── HolidayController.php
-│   │   └── LeaveRequestController.php
-│   └── Models/
-│       ├── Attendance.php
-│       ├── Department.php
-│       ├── Designation.php
-│       ├── Employee.php
-│       ├── Holiday.php
-│       ├── LeaveRequest.php
-│       ├── User.php
-│       └── UserLog.php
+│   │   ├── LeaveRequestController.php
+│   │   ├── PaySlipController.php
+│   │   ├── ProfileController.php
+│   │   └── SalaryStructureController.php
+│   ├── Models/
+│   │   ├── Attendance.php
+│   │   ├── Branding.php
+│   │   ├── Department.php
+│   │   ├── Designation.php
+│   │   ├── Employee.php
+│   │   ├── EmployeeSalaryStructure.php
+│   │   ├── Holiday.php
+│   │   ├── LeaveRequest.php
+│   │   ├── PaySlip.php
+│   │   ├── SalaryComponent.php
+│   │   ├── SalaryStructure.php
+│   │   ├── User.php
+│   │   └── UserLog.php
+│   ├── Services/Payroll/
+│   │   ├── PaySlipGenerator.php
+│   │   └── PdfGenerator.php
+│   └── Jobs/
+│       ├── GeneratePaySlipForEmployeeJob.php
+│       └── GeneratePaySlipsJob.php
 ├── database/migrations/
 │   ├── 2014_10_12_000000_create_users_table.php
+│   ├── 2014_10_12_100000_create_password_reset_tokens_table.php
+│   ├── 2019_08_19_000000_create_failed_jobs_table.php
+│   ├── 2019_12_14_000001_create_personal_access_tokens_table.php
+│   ├── 2025_01_27_120000_create_pay_slips_table.php
+│   ├── 2025_09_08_000000_create_user_logs_table.php
 │   ├── 2025_09_08_020000_create_departments_table.php
 │   ├── 2025_09_08_020100_create_designations_table.php
 │   ├── 2025_09_08_030000_create_employees_table.php
 │   ├── 2025_09_08_040000_create_attendances_table.php
 │   ├── 2025_09_08_040100_create_leave_requests_table.php
 │   ├── 2025_09_08_040200_create_holidays_table.php
-│   └── 2025_09_08_050000_add_soft_deletes_to_users_table.php
+│   ├── 2025_09_08_050000_add_soft_deletes_to_users_table.php
+│   ├── 2025_09_08_060000_create_salary_structures_table.php
+│   ├── 2025_09_08_060100_create_salary_components_table.php
+│   ├── 2025_09_08_060200_create_employee_salary_structures_table.php
+│   ├── 2025_09_08_070000_create_brandings_table.php
+│   └── 2025_09_08_070200_drop_salary_from_employees_table.php
 ├── resources/js/
 │   ├── components/
 │   │   ├── Header.vue
@@ -274,6 +362,8 @@ hrm.ridwan/
 │   │   │   ├── AdminProfile.vue
 │   │   │   ├── UpdateProfile.vue
 │   │   │   └── ChangePassword.vue
+│   │   ├── Settings/
+│   │   │   └── BrandingPage.vue
 │   │   ├── Attendance/
 │   │   │   ├── DailyAttendance.vue
 │   │   │   ├── LeaveRequests.vue
@@ -286,6 +376,14 @@ hrm.ridwan/
 │   │   │   └── ResetPassword.vue
 │   │   ├── Dashboard/
 │   │   │   └── Dashboard.vue
+│   │   ├── Payroll/
+│   │   │   ├── SalaryStructures/
+│   │   │   │   ├── SalaryStructures.vue
+│   │   │   │   └── SalaryStructureForm.vue
+│   │   │   └── PaySlips/
+│   │   │       ├── PaySlips.vue
+│   │   │       ├── PaySlipGenerate.vue
+│   │   │       └── PaySlipView.vue
 │   │   └── Employment/
 │   │       ├── Departments/
 │   │       │   ├── Departments.vue
@@ -305,6 +403,15 @@ hrm.ridwan/
 ```
 
 ## 🎯 Key Features
+
+### Payroll System Features
+- **Salary Structure Management** - Create and manage salary structures with components
+- **Employee Salary Assignment** - Assign salary structures to employees with effective dates
+- **Pay Slip Generation** - Generate individual or batch pay slips for monthly/weekly periods
+- **Pay Slip Regeneration** - Recalculate existing pay slips with current salary structure
+- **PDF Generation** - Automatic PDF generation for pay slips with company branding
+- **Status Management** - Track pay slip status (Pending/Paid) with audit trail
+- **Salary History** - Complete history of salary changes for each employee
 
 ### User Experience
 - **Responsive Design** - Works on desktop, tablet, and mobile
@@ -359,12 +466,34 @@ MAIL_ENCRYPTION=tls
 
 ## 🧪 Testing
 
+The system includes comprehensive test coverage for all major features:
+
+### Test Suites
+- **Feature Tests** - API endpoint testing with database interactions
+- **Unit Tests** - Individual component testing
+- **Pay Slip Regenerate Tests** - Specific tests for pay slip regeneration functionality
+
+### Pay Slip Regenerate Testing
+The `PaySlipRegenerateTest` suite covers:
+- ✅ Successful pay slip regeneration with current salary structure
+- ✅ Prevention of paid pay slip regeneration (403 error)
+- ✅ Unauthorized access handling (403 error for non-admin users)
+- ✅ Not found scenarios (404 error for invalid pay slip IDs)
+- ✅ Data validation and error handling
+
+### Running Tests
 ```bash
-# Run PHP tests
+# Run all PHP tests
 php artisan test
 
 # Run specific test suite
 php artisan test --testsuite=Feature
+
+# Run pay slip regenerate tests specifically
+php artisan test tests/Feature/PaySlipRegenerateTest.php
+
+# Run with coverage
+php artisan test --coverage
 ```
 
 ## 📝 Contributing

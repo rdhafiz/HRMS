@@ -17,12 +17,22 @@
 				</div>
 				<div>
 					<label class="block text-sm font-medium">Start Date</label>
-					<input v-model="form.start_date" type="date" class="border rounded px-3 py-2 w-full" />
+					<flat-pickr
+						v-model="form.start_date"
+						:config="dateConfig"
+						placeholder="Select start date"
+						class="border rounded px-3 py-2 w-full"
+					/>
 					<p v-if="errors.start_date" class="text-red-600 text-sm mt-1">{{ errors.start_date[0] }}</p>
 				</div>
 				<div>
 					<label class="block text-sm font-medium">End Date</label>
-					<input v-model="form.end_date" type="date" class="border rounded px-3 py-2 w-full" />
+					<flat-pickr
+						v-model="form.end_date"
+						:config="{ ...dateConfig, minDate: form.start_date }"
+						placeholder="Select end date"
+						class="border rounded px-3 py-2 w-full"
+					/>
 					<p v-if="errors.end_date" class="text-red-600 text-sm mt-1">{{ errors.end_date[0] }}</p>
 				</div>
 				<div class="md:col-span-2">
@@ -42,12 +52,24 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
+// Reusable date configuration
+const dateConfig = {
+	dateFormat: 'Y-m-d',
+	altFormat: 'M j, Y',
+	altInput: true,
+	allowInput: true,
+	clickOpens: true,
+	defaultDate: null
+}
 
 const route = useRoute()
 const router = useRouter()
 const isEdit = computed(() => !!route.params.id)
 
-const form = ref({ name: '', department_id: null, start_date: '', end_date: '', description: '' })
+const form = ref({ name: '', department_id: null, start_date: null, end_date: null, description: '' })
 const errors = ref({})
 const departments = ref([])
 
@@ -56,12 +78,13 @@ const loadDepartments = async () => {
 	departments.value = data.data || data
 }
 
+
 const load = async () => {
 	if (!isEdit.value) return
 	const { data } = await axios.get('/employment/holidays', { params: { id: route.params.id } })
 	const list = data.data || []
 	const item = list.find(x => x.id == route.params.id) || data
-	form.value = { name: item.name, department_id: item.department_id, start_date: item.start_date, end_date: item.end_date, description: item.description }
+	form.value = { name: item.name, department_id: item.department_id, start_date: item.start_date || null, end_date: item.end_date || null, description: item.description }
 }
 
 const submit = async () => {

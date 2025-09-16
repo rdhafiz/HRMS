@@ -2,14 +2,12 @@
   <header class="bg-white border-b">
     <div class="h-16 flex items-center justify-between px-4">
       <div class="flex items-center">
-        <div class="w-9 h-9 rounded-full bg-indigo-600 text-white grid place-items-center font-bold">u</div>
-        <div class="ml-3 text-lg font-semibold">HUB</div>
-      </div>
-      <div class="flex-1 max-w-xl mx-6 hidden md:block">
-        <label class="flex items-center bg-indigo-50/60 rounded-xl px-3 py-2 text-gray-500">
-          <span class="mr-2">🔍</span>
-          <input type="text" placeholder="Search for stats" class="bg-transparent w-full outline-none text-sm text-gray-700 placeholder-gray-500" />
-        </label>
+        <template v-if="logoUrl">
+          <img :src="logoUrl" alt="logo" class="h-9 w-auto" />
+        </template>
+        <template v-else>
+          <div class="text-lg font-bold">HRMS</div>
+        </template>
       </div>
       <div class="flex items-center gap-3 relative" data-user-dropdown>
         <button @click="open = !open" class="flex items-center gap-2">
@@ -37,9 +35,11 @@
 
 <script setup>
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import axios from 'axios'
 const props = defineProps({ user: Object })
 const avatarUrl = computed(() => props.user?.avatar || 'https://avatar.iran.liara.run/public')
 const open = ref(false)
+const logoUrl = ref('')
 
 function handleOutside(event) {
   const dropdown = document.querySelector('[data-user-dropdown]')
@@ -49,5 +49,14 @@ function handleOutside(event) {
 
 onMounted(() => document.addEventListener('click', handleOutside))
 onBeforeUnmount(() => document.removeEventListener('click', handleOutside))
+
+onMounted(async () => {
+  try {
+    const { data } = await axios.get('/branding')
+    logoUrl.value = data?.site_logo_url || ''
+  } catch (e) {
+    logoUrl.value = ''
+  }
+})
 </script>
 

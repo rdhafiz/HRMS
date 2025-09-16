@@ -5,7 +5,12 @@
 		<div class="flex flex-wrap items-end gap-3 mb-4">
 			<div>
 				<label class="block text-sm font-medium">Date</label>
-				<input v-model="filters.date" type="date" class="border rounded px-3 py-2" />
+				<flat-pickr
+					v-model="filters.date"
+					:config="dateConfig"
+					placeholder="Select date"
+					class="border rounded px-3 py-2"
+				/>
 			</div>
 			<div>
 				<label class="block text-sm font-medium">Department</label>
@@ -88,6 +93,18 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+
+// Reusable date configuration
+const dateConfig = {
+	dateFormat: 'Y-m-d',
+	altFormat: 'M j, Y',
+	altInput: true,
+	allowInput: true,
+	clickOpens: true,
+	defaultDate: null
+}
 
 const filters = ref({ date: new Date().toISOString().slice(0,10), department_id: null })
 const departments = ref([])
@@ -95,6 +112,7 @@ const rows = ref([])
 const history = ref({ q: '', items: [] })
 const me = ref(null)
 const canManage = computed(() => me.value?.admin_type === 1 || me.value?.admin_type === 2)
+
 
 const loadDepartments = async () => {
 	const { data } = await axios.get('/employment/departments')
