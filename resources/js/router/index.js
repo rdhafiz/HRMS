@@ -31,6 +31,10 @@ import AdminProfile from '../pages/Profile/AdminProfile.vue'
 import UpdateProfile from '../pages/Profile/UpdateProfile.vue'
 import ChangePassword from '../pages/Profile/ChangePassword.vue'
 import BrandingPage from '../pages/Profile/BrandingPage.vue'
+import SendNotification from '../pages/SendNotification.vue'
+import EmailHistory from '../pages/EmailHistory.vue'
+import EmployeeLayout from '../layouts/EmployeeLayout.vue'
+import EmployeeDashboard from '../pages/Employee/Dashboard.vue'
 
 axios.defaults.withCredentials = true
 axios.defaults.baseURL = '/api'
@@ -97,6 +101,17 @@ const routes = [
       { path: 'profile/change-password', name: 'profile.password', component: ChangePassword, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       // Settings - Branding (System Admin only)
       { path: 'branding', name: 'branding', component: BrandingPage, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN'] } },
+      // Email Notifications
+      { path: 'email-notifications/send', name: 'email.send', component: SendNotification, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
+      { path: 'email-notifications/history', name: 'email.history', component: EmailHistory, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+    ],
+  },
+  {
+    path: '/employee',
+    component: EmployeeLayout,
+    children: [
+      { path: 'dashboard', name: 'employee.dashboard', component: EmployeeDashboard, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      // Add more employee routes here as needed
     ],
   },
 ]
@@ -110,10 +125,16 @@ router.beforeEach(async (to, from, next) => {
   if (!to.meta.requiresAuth) return next()
   try {
     const user = await getUser()
-    const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR']
+    const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR','EMPLOYEE']
     if (roles.includes(user.admin_type_label)) {
       return next()
     }
+    
+    // Redirect employees to their dashboard if they try to access admin routes
+    if (user.admin_type_label === 'EMPLOYEE') {
+      return next({ name: 'employee.dashboard' })
+    }
+    
     return next({ name: 'dashboard' })
   } catch (e) {
     return next({ name: 'login' })

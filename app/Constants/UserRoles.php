@@ -7,6 +7,7 @@ class UserRoles
     public const SYSTEM_ADMIN = 1;
     public const HR_MANAGER = 2;
     public const SUPERVISOR = 3;
+    public const EMPLOYEE = 4;
 
     public static function label(int $role): string
     {
@@ -14,6 +15,7 @@ class UserRoles
             self::SYSTEM_ADMIN => 'system_admin',
             self::HR_MANAGER => 'hr_manager',
             self::SUPERVISOR => 'supervisor',
+            self::EMPLOYEE => 'employee',
             default => 'unknown',
         };
     }
@@ -24,6 +26,7 @@ class UserRoles
             'system_admin' => self::SYSTEM_ADMIN,
             'hr_manager' => self::HR_MANAGER,
             'supervisor' => self::SUPERVISOR,
+            'employee' => self::EMPLOYEE,
             default => null,
         };
     }
