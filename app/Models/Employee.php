@@ -56,6 +56,11 @@ class Employee extends Model
 		return $this->hasOne(EmployeeSalaryStructure::class)->latest('effective_date');
 	}
 
+	public function user()
+	{
+		return $this->hasOne(User::class, 'email', 'email');
+	}
+
 	public function getNameAttribute(): string
 	{
 		return trim($this->first_name . ' ' . $this->last_name);

@@ -64,6 +64,7 @@ class EmployeeController extends Controller
 			
 			// User account fields
 			'password' => ['required', 'string', 'min:8', 'confirmed'],
+			'password_confirmation' => ['required', 'string', 'min:8'],
 		]);
 
 		return DB::transaction(function () use ($request, $validated) {
@@ -122,7 +123,7 @@ class EmployeeController extends Controller
 
 	public function update(Request $request, Employee $employee)
 	{
-		$validated = $request->validate([
+		$validationRules = [
 			'first_name' => ['required', 'string', 'max:191'],
 			'last_name' => ['required', 'string', 'max:191'],
 			'email' => ['required', 'email', 'max:191', Rule::unique('employees', 'email')->ignore($employee->id)],
@@ -140,7 +141,15 @@ class EmployeeController extends Controller
 			// Salary structure fields
 			'salary_structure_id' => ['required', 'exists:salary_structures,id'],
 			'effective_date' => ['required', 'date'],
-		]);
+		];
+
+		// Add password validation only if password is provided
+		if ($request->filled('password')) {
+			$validationRules['password'] = ['string', 'min:8', 'confirmed'];
+			$validationRules['password_confirmation'] = ['string', 'min:8'];
+		}
+
+		$validated = $request->validate($validationRules);
 
 		return DB::transaction(function () use ($request, $employee, $validated) {
 			$employee->update([
@@ -158,11 +167,37 @@ class EmployeeController extends Controller
 				'status' => $validated['status'] ?? 'active',
 			]);
 
+			// Update user account if it exists
+			$user = User::where('email', $employee->getOriginal('email'))->first();
+			if ($user) {
+				$userData = [
+					'name' => $employee->name,
+					'email' => $validated['email'],
+				];
+
+				// Only update password if provided
+				if (isset($validated['password'])) {
+					$userData['password'] = Hash::make($validated['password']);
+				}
+
+				$user->update($userData);
+			} else {
+				// Create user account for employee
+				$user = User::create([
+					'name' => $employee->name,
+					'email' => $employee->email,
+					'password' => Hash::make($validated['password']),
+					'admin_type' => UserRoles::EMPLOYEE,
+					'email_verified_at' => now(), // Auto-verify employee accounts
+				]);
+			}
+
 			// Update or create salary structure assignment
 			$currentSalaryStructure = $employee->currentSalaryStructure;
+		
 			if ($currentSalaryStructure && 
 				$currentSalaryStructure->salary_structure_id == $validated['salary_structure_id'] &&
-				$currentSalaryStructure->effective_date == $validated['effective_date']) {
+				date('Y-m-d', strtotime($currentSalaryStructure->effective_date)) == date('Y-m-d', strtotime($validated['effective_date']))) {
 				// No change needed
 			} else {
 				// Create new salary structure assignment
