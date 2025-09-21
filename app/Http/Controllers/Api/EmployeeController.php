@@ -5,9 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeSalaryStructure;
+use App\Models\User;
 use App\Models\UserLog;
+use App\Constants\UserRoles;
+use App\Mail\EmployeeWelcomeMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 
 class EmployeeController extends Controller
@@ -41,7 +46,7 @@ class EmployeeController extends Controller
 		$validated = $request->validate([
 			'first_name' => ['required', 'string', 'max:191'],
 			'last_name' => ['required', 'string', 'max:191'],
-			'email' => ['required', 'email', 'max:191', 'unique:employees,email'],
+			'email' => ['required', 'email', 'max:191', 'unique:employees,email', 'unique:users,email'],
 			'phone' => ['nullable', 'string', 'max:191'],
 			'date_of_birth' => ['nullable', 'date'],
 			'gender' => ['nullable', Rule::in(['male', 'female', 'other'])],
@@ -56,9 +61,13 @@ class EmployeeController extends Controller
 			// Salary structure fields
 			'salary_structure_id' => ['required', 'exists:salary_structures,id'],
 			'effective_date' => ['required', 'date'],
+			
+			// User account fields
+			'password' => ['required', 'string', 'min:8', 'confirmed'],
 		]);
 
 		return DB::transaction(function () use ($request, $validated) {
+			// Create employee record
 			$employee = Employee::create([
 				'first_name' => $validated['first_name'],
 				'last_name' => $validated['last_name'],
@@ -75,6 +84,15 @@ class EmployeeController extends Controller
 				'created_by' => $request->user()->id,
 			]);
 
+			// Create user account for employee
+			$user = User::create([
+				'name' => $employee->name,
+				'email' => $validated['email'],
+				'password' => Hash::make($validated['password']),
+				'admin_type' => UserRoles::EMPLOYEE,
+				'email_verified_at' => now(), // Auto-verify employee accounts
+			]);
+
 			// Assign salary structure
 			EmployeeSalaryStructure::create([
 				'employee_id' => $employee->id,
@@ -82,12 +100,15 @@ class EmployeeController extends Controller
 				'effective_date' => $validated['effective_date'],
 			]);
 
+			// Send welcome email with login credentials
+			Mail::to($employee->email)->send(new EmployeeWelcomeMail($employee, $validated['password']));
+
 			UserLog::create([
 				'user_id' => $request->user()->id,
 				'type' => 'employee_create',
 				'ip' => $request->ip(),
 				'user_agent' => (string) $request->userAgent(),
-				'meta' => ['employee_id' => $employee->id],
+				'meta' => ['employee_id' => $employee->id, 'user_id' => $user->id],
 			]);
 
 			return response()->json($employee->load(['department', 'designation', 'currentSalaryStructure.structure.components']), 201);

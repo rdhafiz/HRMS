@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\PaySlipController;
+use App\Http\Controllers\Api\EmailNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,4 +146,16 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
         Route::post('pay-slips/{paySlip}/regenerate', [PaySlipController::class, 'regenerate']);
     });
     Route::get('pay-slips/{paySlip}', [PaySlipController::class, 'show']);
+});
+
+// Email Notifications
+Route::middleware('auth:sanctum')->prefix('email-notifications')->group(function () {
+    Route::get('/', [EmailNotificationController::class, 'index']);
+    Route::get('/departments', [EmailNotificationController::class, 'getDepartments']);
+    Route::get('/employees', [EmailNotificationController::class, 'getEmployees']);
+    Route::get('/{id}', [EmailNotificationController::class, 'show']);
+    
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('/', [EmailNotificationController::class, 'store']);
+    });
 });

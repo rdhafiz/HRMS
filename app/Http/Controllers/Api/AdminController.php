@@ -74,7 +74,7 @@ class AdminController extends Controller
 		]);
 
 		$data = $validated;
-		if (!$data['password']) {
+		if (!isset($data['password'])) {
 			unset($data['password']);
 		}
 		if ($request->hasFile('avatar')) {
