@@ -133,11 +133,9 @@ const datePickerConfig = computed(() => {
 })
 
 const changeDates = () => {
-  console.log(form.value.selectedDates)
   const selectedDates = form.value.selectedDates.split(' to ');
   form.value.start_date = selectedDates[0] ?? ''
   form.value.end_date = selectedDates[1] ?? ''
-  console.log(form.value.start_date, form.value.end_date)
 }
 
 const formatDate = (dateString) => {
