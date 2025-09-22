@@ -226,7 +226,6 @@ const form = reactive({
 const errors = ref({})
 
 const recipientsPreview = computed(() => {
-  console.log(employees.value);
   if (form.recipient_type === 'all') {
     return employees.value
   } else if (form.recipient_type === 'department') {
@@ -298,14 +297,7 @@ const sendNotification = async () => {
     formData.append('subject', form.subject)
     formData.append('body', emailBody)
     formData.append('recipient_type', form.recipient_type)
-    
-    // Debug logging
-    console.log('Sending notification with:', {
-      subject: form.subject,
-      body: emailBody,
-      recipient_type: form.recipient_type,
-      attachments_count: form.attachments.length
-    })
+  
     
     if (form.recipient_type === 'department') {
       formData.append('department_id', form.department_id)

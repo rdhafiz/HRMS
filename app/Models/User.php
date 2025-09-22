@@ -26,6 +26,8 @@ class User extends Authenticatable
         'admin_type',
         'reset_code',
         'reset_code_sent_at',
+        'account_source',
+        'microsoft_id',
     ];
 
     /**

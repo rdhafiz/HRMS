@@ -82,22 +82,6 @@
         </div>
       </Transition>
 
-      <button @click="toggle('reports')" class="flex w-full items-center gap-3 px-3 py-4 rounded hover:bg-indigo-50"
-              :class="{ 'bg-indigo-50 text-indigo-700': groupActive('reports') }">
-        <span class="w-5 h-5 grid place-items-center">📊</span>
-        <span class="flex-1 text-left">Reports</span>
-        <span class="text-gray-500">{{ open.reports ? '▾' : '▸' }}</span>
-      </button>
-      <Transition enter-active-class="transition-all duration-200 ease-out" enter-from-class="opacity-0 max-h-0"
-                  enter-to-class="opacity-100 max-h-96" leave-active-class="transition-all duration-200 ease-in"
-                  leave-from-class="opacity-100 max-h-96" leave-to-class="opacity-0 max-h-0">
-        <div v-show="open.reports" class="ml-8 space-y-1 overflow-hidden">
-          <a href="#" class="block px-3 py-1 rounded hover:bg-indigo-50">Attendance Report</a>
-          <a href="#" class="block px-3 py-1 rounded hover:bg-indigo-50">Payroll Report</a>
-          <a href="#" class="block px-3 py-1 rounded hover:bg-indigo-50">Performance Report</a>
-        </div>
-      </Transition>
-
       <button v-if="isSystemAdmin" @click="toggle('settings')" class="flex w-full items-center gap-3 px-3 py-4 rounded hover:bg-indigo-50"
               :class="{ 'bg-indigo-50 text-indigo-700': groupActive('settings') }">
         <span class="w-5 h-5 grid place-items-center">⚙️</span>

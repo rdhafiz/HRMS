@@ -28,6 +28,7 @@ import PaySlipHistory from '../pages/payroll/PaySlipHistory.vue'
 import Admins from '../pages/Admins/Admins.vue'
 import AdminForm from '../pages/Admins/AdminForm.vue'
 import AdminProfile from '../pages/Profile/AdminProfile.vue'
+import TestCharts from '../pages/TestCharts.vue'
 import UpdateProfile from '../pages/Profile/UpdateProfile.vue'
 import ChangePassword from '../pages/Profile/ChangePassword.vue'
 import BrandingPage from '../pages/Profile/BrandingPage.vue'
@@ -106,6 +107,8 @@ const routes = [
       { path: 'profile', name: 'profile', component: AdminProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/update', name: 'profile.update', component: UpdateProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/change-password', name: 'profile.password', component: ChangePassword, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Test Charts (for debugging)
+      { path: 'test-charts', name: 'test.charts', component: TestCharts, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       // Settings - Branding (System Admin only)
       { path: 'branding', name: 'branding', component: BrandingPage, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN'] } },
       // Email Notifications

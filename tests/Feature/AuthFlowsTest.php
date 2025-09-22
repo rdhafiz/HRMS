@@ -19,12 +19,12 @@ class AuthFlowsTest extends TestCase
         ]);
 
         $this->withSession([]);
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/auth/login', [
             'email' => $user->email,
             'password' => 'password123',
         ])->assertOk();
 
-        $this->getJson('/api/auth/user')->assertOk();
+        $this->getJson('/auth/user')->assertOk();
     }
 
     public function test_login_fail(): void
@@ -34,7 +34,7 @@ class AuthFlowsTest extends TestCase
             'admin_type' => 'system_admin',
         ]);
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/auth/login', [
             'email' => $user->email,
             'password' => 'wrongpass',
         ])->assertStatus(422);
@@ -47,20 +47,20 @@ class AuthFlowsTest extends TestCase
             'admin_type' => 'system_admin',
         ]);
 
-        $this->postJson('/api/auth/forgot', ['email' => $user->email])
+        $this->postJson('/auth/forgot', ['email' => $user->email])
             ->assertOk();
 
         $user->refresh();
         $code = $user->reset_code;
 
-        $this->postJson('/api/auth/reset', [
+        $this->postJson('/auth/reset', [
             'email' => $user->email,
             'code' => $code,
             'password' => 'newpassword123',
             'password_confirmation' => 'newpassword123',
         ])->assertOk();
 
-        $this->postJson('/api/auth/login', [
+        $this->postJson('/auth/login', [
             'email' => $user->email,
             'password' => 'newpassword123',
         ])->assertOk();

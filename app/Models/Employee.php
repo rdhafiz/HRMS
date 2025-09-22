@@ -24,6 +24,8 @@ class Employee extends Model
 		'designation_id',
 		'status',
 		'created_by',
+		'account_source',
+		'microsoft_id',
 	];
 
 	protected $casts = [
