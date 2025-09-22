@@ -12,6 +12,8 @@ class LeaveRequest extends Model
 
 	protected $fillable = [
 		'employee_id',
+		'subject',
+		'application_body',
 		'leave_type',
 		'start_date',
 		'end_date',
@@ -22,7 +24,7 @@ class LeaveRequest extends Model
 
 	protected $casts = [
 		'start_date' => 'date',
-		'end_date' => 'date',
+		'end_date' => 'date'
 	];
 
 	public function employee()

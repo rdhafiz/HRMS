@@ -11,9 +11,11 @@ return new class extends Migration
 		Schema::create('leave_requests', function (Blueprint $table) {
 			$table->id();
 			$table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
+			$table->string('subject')->nullable();
+            $table->text('application_body')->nullable();
 			$table->enum('leave_type', ['sick','casual','paid','unpaid']);
-			$table->date('start_date');
-			$table->date('end_date');
+			$table->date('start_date')->nullable();
+			$table->date('end_date')->nullable();
 			$table->text('reason')->nullable();
 			$table->enum('status', ['pending','approved','rejected'])->default('pending');
 			$table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
