@@ -23,12 +23,24 @@
                 <p class="text-sm text-gray-500">View and update your profile</p>
               </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 space-y-2">
               <router-link
                 to="/employee/profile"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 mr-2"
               >
                 View Profile
+              </router-link>
+              <router-link
+                to="/employee/profile/update"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-100 hover:bg-green-200 mr-2"
+              >
+                Update Profile
+              </router-link>
+              <router-link
+                to="/employee/profile/change-password"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-600 bg-purple-100 hover:bg-purple-200"
+              >
+                Change Password
               </router-link>
             </div>
           </div>
@@ -47,15 +59,21 @@
               </div>
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">Leave Management</h3>
-                <p class="text-sm text-gray-500">Apply for leave and view balance</p>
+                <p class="text-sm text-gray-500">Apply for leave and view history</p>
               </div>
             </div>
-            <div class="mt-4">
+            <div class="mt-4 space-y-2">
               <router-link
-                to="/employee/leaves"
-                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-100 hover:bg-green-200"
+                to="/employee/leaves/apply"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-100 hover:bg-green-200 mr-2"
               >
-                Manage Leaves
+                Apply for Leave
+              </router-link>
+              <router-link
+                to="/employee/leaves/history"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200"
+              >
+                Leave History
               </router-link>
             </div>
           </div>
@@ -74,7 +92,7 @@
               </div>
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">Attendance</h3>
-                <p class="text-sm text-gray-500">View your attendance records</p>
+                <p class="text-sm text-gray-500">View your attendance history and records</p>
               </div>
             </div>
             <div class="mt-4">
@@ -95,13 +113,13 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center">
                   <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                   </svg>
                 </div>
               </div>
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900">Holidays</h3>
-                <p class="text-sm text-gray-500">View company holidays</p>
+                <p class="text-sm text-gray-500">View upcoming and past holidays</p>
               </div>
             </div>
             <div class="mt-4">

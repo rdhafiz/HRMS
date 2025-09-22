@@ -6,6 +6,7 @@
         "build": "vite build"
     },
     "dependencies": {
+        "@heroicons/vue": "^2.1.1",
         "@tiptap/extension-image": "^3.4.4",
         "@tiptap/extension-link": "^3.4.4",
         "@tiptap/extension-text-align": "^3.4.4",

@@ -35,6 +35,13 @@ import SendNotification from '../pages/SendNotification.vue'
 import EmailHistory from '../pages/EmailHistory.vue'
 import EmployeeLayout from '../layouts/EmployeeLayout.vue'
 import EmployeeDashboard from '../pages/Employee/Dashboard.vue'
+import EmployeeProfile from '../pages/Employee/Profile.vue'
+import EmployeeUpdateProfile from '../pages/Employee/UpdateProfile.vue'
+import EmployeeChangePassword from '../pages/Employee/ChangePassword.vue'
+import EmployeeHolidayList from '../pages/Employee/HolidayList.vue'
+import EmployeeAttendanceHistory from '../pages/Employee/AttendanceHistory.vue'
+import ApplyLeave from '../pages/Employee/Leave/ApplyLeave.vue'
+import LeaveHistory from '../pages/Employee/Leave/LeaveHistory.vue'
 
 axios.defaults.withCredentials = true
 axios.defaults.baseURL = '/api'
@@ -111,6 +118,14 @@ const routes = [
     component: EmployeeLayout,
     children: [
       { path: 'dashboard', name: 'employee.dashboard', component: EmployeeDashboard, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile', name: 'employee.profile', component: EmployeeProfile, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile/update', name: 'employee.profile.update', component: EmployeeUpdateProfile, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile/change-password', name: 'employee.profile.change-password', component: EmployeeChangePassword, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'holidays', name: 'employee.holidays', component: EmployeeHolidayList, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'attendance', name: 'employee.attendance', component: EmployeeAttendanceHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      // Leave Management
+      { path: 'leaves/apply', name: 'employee.leaves.apply', component: ApplyLeave, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'leaves/history', name: 'employee.leaves.history', component: LeaveHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
       // Add more employee routes here as needed
     ],
   },
