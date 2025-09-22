@@ -75,8 +75,10 @@
                   enter-to-class="opacity-100 max-h-96" leave-active-class="transition-all duration-200 ease-in"
                   leave-from-class="opacity-100 max-h-96" leave-to-class="opacity-0 max-h-0">
         <div v-show="open.notifications" class="ml-8 space-y-1 overflow-hidden">
-          <a href="#" class="block px-3 py-1 rounded hover:bg-indigo-50">Email Notifications</a>
-          <a href="#" class="block px-3 py-1 rounded hover:bg-indigo-50">Announcements</a>
+          <router-link v-if="isSystemAdmin || isHRManager" to="/email-notifications/send" class="block px-3 py-1 rounded hover:bg-indigo-50"
+                       :class="{ 'bg-indigo-50 text-indigo-700': isActive('/email-notifications/send') }">Send Notification</router-link>
+          <router-link to="/email-notifications/history" class="block px-3 py-1 rounded hover:bg-indigo-50"
+                       :class="{ 'bg-indigo-50 text-indigo-700': isActive('/email-notifications/history') }">Email History</router-link>
         </div>
       </Transition>
 
@@ -143,7 +145,7 @@ function groupActive(group) {
   if (group === 'employee') return ['/departments','/designations','/employees'].some(isActive)
   if (group === 'attendance') return ['/attendance/daily','/attendance/leaves','/attendance/holidays'].some(isActive)
   if (group === 'payroll') return ['/payroll/salary-structures','/payroll/payslips'].some(isActive)
-  if (group === 'notifications') return false
+  if (group === 'notifications') return ['/email-notifications/send','/email-notifications/history'].some(isActive)
   if (group === 'reports') return false
   if (group === 'settings') return ['/branding'].some(isActive)
   return false

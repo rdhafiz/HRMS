@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\PaySlipController;
+use App\Http\Controllers\Api\EmailNotificationController;
+use App\Http\Controllers\Api\EmployeeProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -145,4 +147,40 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
         Route::post('pay-slips/{paySlip}/regenerate', [PaySlipController::class, 'regenerate']);
     });
     Route::get('pay-slips/{paySlip}', [PaySlipController::class, 'show']);
+});
+
+// Employee Profile (Employee role only)
+Route::middleware(['auth:sanctum', 'role:employee'])->prefix('employee')->group(function () {
+    Route::get('/profile', [EmployeeProfileController::class, 'index']);
+    Route::get('/activity-logs', [EmployeeProfileController::class, 'activityLogs']);
+    Route::post('/profile', [EmployeeProfileController::class, 'updateProfile']);
+    Route::post('/change-password', [EmployeeProfileController::class, 'changePassword']);
+});
+
+// Employee Holidays (Employee role only)
+Route::middleware(['auth:sanctum', 'role:employee'])->group(function () {
+    Route::get('/holidays/employee', [HolidayController::class, 'employeeHolidays']);
+});
+
+// Employee Attendance (Employee role only)
+Route::middleware(['auth:sanctum', 'role:employee'])->group(function () {
+    Route::get('/attendances/employee', [AttendanceController::class, 'employeeAttendance']);
+});
+
+// Employee Leave Management (Employee role only)
+Route::middleware(['auth:sanctum', 'role:employee'])->prefix('leaves')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\LeaveController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\Api\LeaveController::class, 'store']);
+});
+
+// Email Notifications
+Route::middleware('auth:sanctum')->prefix('email-notifications')->group(function () {
+    Route::get('/', [EmailNotificationController::class, 'index']);
+    Route::get('/departments', [EmailNotificationController::class, 'getDepartments']);
+    Route::get('/employees', [EmailNotificationController::class, 'getEmployees']);
+    Route::get('/{id}', [EmailNotificationController::class, 'show']);
+    
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('/', [EmailNotificationController::class, 'store']);
+    });
 });

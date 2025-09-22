@@ -22,7 +22,8 @@
             </div>
           </div>
           <div class="py-1 text-sm">
-            <router-link to="/profile" class="block px-3 py-2 hover:bg-gray-50">Profile</router-link>
+            <router-link v-if="user?.admin_type !== 4" to="/profile" class="block px-3 py-2 hover:bg-gray-50">Profile</router-link>
+            <router-link v-if="user?.admin_type === 4" to="/employee/profile" class="block px-3 py-2 hover:bg-gray-50">Profile</router-link>
             <button @click="$emit('logout')" class="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
           </div>
         </div>
