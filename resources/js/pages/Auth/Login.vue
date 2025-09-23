@@ -19,6 +19,8 @@
         </div>
         <form @submit.prevent="submit" class="space-y-4">
           <p v-if="notice" class="text-green-700 text-sm">{{ notice }}</p>
+          <p v-if="success" class="text-green-700 text-sm">{{ success }}</p>
+          <p v-if="successMessage" class="text-green-700 text-sm">{{ successMessage }}</p>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Username</label>
             <input v-model="email" type="email" placeholder="John Doe" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" required />
@@ -42,6 +44,38 @@
           <button :disabled="loading" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg disabled:opacity-50 transition">Login</button>
         </form>
 
+        <!-- Divider -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <!-- Microsoft Login Button -->
+        <div class="space-y-3">
+          <button 
+            @click="loginWithMicrosoft" 
+            :disabled="microsoftLoading"
+            class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            <svg v-if="!microsoftLoading" class="w-5 h-5 mr-2" viewBox="0 0 21 21" fill="none">
+              <path d="M10.5 1L1 5.5V10.5L10.5 15L20 10.5V5.5L10.5 1Z" fill="#F25022"/>
+              <path d="M10.5 1L1 5.5V10.5L10.5 15L20 10.5V5.5L10.5 1Z" fill="#7FBA00"/>
+              <path d="M10.5 1L1 5.5V10.5L10.5 15L20 10.5V5.5L10.5 1Z" fill="#00A4EF"/>
+              <path d="M10.5 1L1 5.5V10.5L10.5 15L20 10.5V5.5L10.5 1Z" fill="#FFB900"/>
+            </svg>
+            <svg v-else class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span v-if="!microsoftLoading">Login with Microsoft</span>
+            <span v-else>Connecting...</span>
+          </button>
+        </div>
+
         <p class="text-xs text-gray-500 mt-6 text-center">Unable to login? Kindly connect with <a href="#" class="underline">IT Support Team</a></p>
       </div>
     </div>
@@ -56,11 +90,14 @@ import axios from 'axios'
 const email = ref('admin@example.com')
 const password = ref('password123')
 const error = ref('')
+const success = ref('')
 const loading = ref(false)
+const microsoftLoading = ref(false)
 const showPassword = ref(false)
 const appName = computed(() => import.meta.env.VITE_APP_NAME || 'HR Portal')
 const route = useRoute()
 const notice = computed(() => route.query.notice)
+const successMessage = computed(() => route.query.success)
 
 async function submit() {
   error.value = ''
@@ -74,6 +111,14 @@ async function submit() {
   } finally {
     loading.value = false
   }
+}
+
+function loginWithMicrosoft() {
+  microsoftLoading.value = true
+  error.value = ''
+  
+  // Redirect to Microsoft OAuth
+  window.location.href = '/auth/microsoft'
 }
 </script>
 

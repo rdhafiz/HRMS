@@ -16,7 +16,7 @@ class AdminController extends Controller
 		$adminType = $request->query('admin_type');
 		$q = $request->query('q');
 
-		$query = User::query()->when($adminType, function ($q2) use ($adminType) {
+		$query = User::query()->where('admin_type', '!=', UserRoles::EMPLOYEE)->when($adminType, function ($q2) use ($adminType) {
 			$q2->where('admin_type', (int) $adminType);
 		});
 

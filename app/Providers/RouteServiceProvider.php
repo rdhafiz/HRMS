@@ -24,8 +24,24 @@ class RouteServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // General API rate limiting - more generous for dashboard usage
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute(300)->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Specific rate limiting for login attempts
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Rate limiting for password reset attempts
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip());
+        });
+
+        // Rate limiting for dashboard data (more generous for authenticated users)
+        RateLimiter::for('dashboard', function (Request $request) {
+            return Limit::perMinute(1000)->by($request->user()?->id ?: $request->ip());
         });
 
         $this->routes(function () {

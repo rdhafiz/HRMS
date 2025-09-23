@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\MicrosoftAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+// Microsoft OAuth routes (web routes for redirects)
+Route::get('/auth/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft']);
+Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback']);
 
 // Route::get('/', function () {
 //     return view('welcome');

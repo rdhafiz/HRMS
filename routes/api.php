@@ -33,12 +33,12 @@ use App\Http\Controllers\Api\EmployeeProfileController;
 
 // Auth endpoints
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/forgot', [PasswordResetController::class, 'sendResetCode']);
-    Route::post('/verify-reset-code', [PasswordResetController::class, 'verifyCode']);
-    Route::post('/reset', [PasswordResetController::class, 'reset']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+    Route::post('/forgot', [PasswordResetController::class, 'sendResetCode'])->middleware('throttle:password-reset');
+    Route::post('/verify-reset-code', [PasswordResetController::class, 'verifyCode'])->middleware('throttle:password-reset');
+    Route::post('/reset', [PasswordResetController::class, 'reset'])->middleware('throttle:password-reset');
 
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle.custom:api'])->group(function () {
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
@@ -49,6 +49,7 @@ Route::prefix('auth')->group(function () {
         Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     });
 });
+
 
 // Admins Management (System Admin only)
 Route::middleware(['auth:sanctum', 'role:system_admin'])->prefix('admins')->group(function () {
@@ -69,8 +70,19 @@ Route::middleware(['auth:sanctum', 'role:system_admin'])->group(function () {
 Route::middleware(['auth:sanctum', 'role:system_admin|hr_manager'])
     ->get('/dashboard/data', [DashboardController::class, 'index']);
 
+// Dashboard API endpoints for individual cards
+Route::middleware(['auth:sanctum', 'role:system_admin|hr_manager', 'throttle:dashboard'])->prefix('dashboard')->group(function () {
+    Route::get('/employees', [App\Http\Controllers\Api\DashboardApiController::class, 'employees']);
+    Route::get('/attendance', [App\Http\Controllers\Api\DashboardApiController::class, 'attendance']);
+    Route::get('/leaves', [App\Http\Controllers\Api\DashboardApiController::class, 'leaves']);
+    Route::get('/holidays', [App\Http\Controllers\Api\DashboardApiController::class, 'holidays']);
+    Route::get('/activity', [App\Http\Controllers\Api\DashboardApiController::class, 'activity']);
+    Route::get('/departments', [App\Http\Controllers\Api\DashboardApiController::class, 'departments']);
+    Route::get('/activity-logs', [App\Http\Controllers\Api\DashboardApiController::class, 'activityLogs']);
+});
+
 // Employment Management
-Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle.custom:api'])->prefix('employment')->group(function () {
     // Departments
     Route::get('departments', [DepartmentController::class, 'index']);
     Route::get('departments/{department}', [DepartmentController::class, 'show']);
@@ -150,7 +162,7 @@ Route::middleware('auth:sanctum')->prefix('employment')->group(function () {
 });
 
 // Employee Profile (Employee role only)
-Route::middleware(['auth:sanctum', 'role:employee'])->prefix('employee')->group(function () {
+Route::middleware(['auth:sanctum', 'role:employee', 'throttle.custom:api'])->prefix('employee')->group(function () {
     Route::get('/profile', [EmployeeProfileController::class, 'index']);
     Route::get('/activity-logs', [EmployeeProfileController::class, 'activityLogs']);
     Route::post('/profile', [EmployeeProfileController::class, 'updateProfile']);
@@ -158,23 +170,23 @@ Route::middleware(['auth:sanctum', 'role:employee'])->prefix('employee')->group(
 });
 
 // Employee Holidays (Employee role only)
-Route::middleware(['auth:sanctum', 'role:employee'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:employee', 'throttle.custom:api'])->group(function () {
     Route::get('/holidays/employee', [HolidayController::class, 'employeeHolidays']);
 });
 
 // Employee Attendance (Employee role only)
-Route::middleware(['auth:sanctum', 'role:employee'])->group(function () {
+Route::middleware(['auth:sanctum', 'role:employee', 'throttle.custom:api'])->group(function () {
     Route::get('/attendances/employee', [AttendanceController::class, 'employeeAttendance']);
 });
 
 // Employee Leave Management (Employee role only)
-Route::middleware(['auth:sanctum', 'role:employee'])->prefix('leaves')->group(function () {
+Route::middleware(['auth:sanctum', 'role:employee', 'throttle.custom:api'])->prefix('leaves')->group(function () {
     Route::get('/', [App\Http\Controllers\Api\LeaveController::class, 'index']);
     Route::post('/', [App\Http\Controllers\Api\LeaveController::class, 'store']);
 });
 
 // Email Notifications
-Route::middleware('auth:sanctum')->prefix('email-notifications')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle.custom:api'])->prefix('email-notifications')->group(function () {
     Route::get('/', [EmailNotificationController::class, 'index']);
     Route::get('/departments', [EmailNotificationController::class, 'getDepartments']);
     Route::get('/employees', [EmailNotificationController::class, 'getEmployees']);
