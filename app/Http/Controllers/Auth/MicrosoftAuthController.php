@@ -22,87 +22,98 @@ class MicrosoftAuthController extends Controller
     {
         $clientId = config('services.microsoft.client_id');
         $redirectUri = config('services.microsoft.redirect');
+        $tenant     = config('services.microsoft.tenant', 'common');
         $state = Str::random(40);
-        
+
         session(['microsoft_oauth_state' => $state]);
-        
+
+        $scope = implode(' ', [
+            'openid',
+            'profile',
+            'email',
+            'offline_access',
+            'https://graph.microsoft.com/User.Read',
+        ]);
+
         $params = http_build_query([
             'client_id' => $clientId,
             'response_type' => 'code',
             'redirect_uri' => $redirectUri,
-            'scope' => 'openid profile email',
+            'scope' => $scope,
             'state' => $state,
             'response_mode' => 'query'
         ]);
-        
-        return redirect("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?{$params}");
+
+        return redirect("https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/authorize?{$params}");
     }
 
     public function handleMicrosoftCallback(Request $request)
     {
         try {
-
             // Verify state parameter
-            if ($request->state !== session('microsoft_oauth_state')) {
+            if (!$request->has('state') || $request->state !== session('microsoft_oauth_state')) {
                 return redirect('/')->with('error', 'Invalid state parameter.');
             }
-            
-            // Exchange code for token
-            $tokenResponse = Http::asForm()->post('https://login.microsoftonline.com/common/oauth2/v2.0/token', [
+            session()->forget('microsoft_oauth_state');
+
+            // Exchange code for token - Fix the URL interpolation
+            $tenant = config('services.microsoft.tenant', 'common');
+            $tokenResponse = Http::asForm()->post("https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/token", [
                 'client_id' => config('services.microsoft.client_id'),
                 'client_secret' => config('services.microsoft.client_secret'),
-                'code' => $request->code,
+                'code' => $request->input('code'),
                 'grant_type' => 'authorization_code',
                 'redirect_uri' => config('services.microsoft.redirect'),
             ]);
-            
-            if (!$tokenResponse->successful()) {
-                throw new \Exception('Failed to get access token');
-            }
-            
-            $tokenData = $tokenResponse->json();
-            $accessToken = $tokenData['access_token'];
 
-            dd(session('microsoft_oauth_state'), $request->all(), $accessToken);
-            
+            if (!$tokenResponse->successful()) {
+                Log::error('Microsoft token exchange failed', [
+                    'response' => $tokenResponse->json(),
+                    'status' => $tokenResponse->status()
+                ]);
+                throw new \Exception('Failed to get access token: ' . $tokenResponse->body());
+            }
+
+            $accessToken = $tokenResponse->json('access_token');
+
             // Get user info from Microsoft Graph
             $userResponse = Http::withToken($accessToken)->get('https://graph.microsoft.com/v1.0/me');
-            
+
             if (!$userResponse->successful()) {
-                throw new \Exception('Failed to get user information');
+                Log::error('Microsoft user info failed', [
+                    'response' => $userResponse->json(),
+                    'status' => $userResponse->status()
+                ]);
+                throw new \Exception('Failed to get user information: ' . $userResponse->body());
             }
-            
+
             $microsoftUser = $userResponse->json();
-            
+
             // Check if user already exists
             $user = User::where('email', $microsoftUser['mail'] ?? $microsoftUser['userPrincipalName'])->first();
-            
+
             if ($user) {
-                // User exists, check if it's a Microsoft login user
-                if ($user->account_source === 'microsoft_login') {
-                    // Login the existing Microsoft user
-                    Auth::login($user);
-                    
-                    // Log the login
-                    UserLog::create([
-                        'user_id' => $user->id,
-                        'type' => 'microsoft_login',
-                        'ip' => $request->ip(),
-                        'user_agent' => (string) $request->userAgent(),
-                        'meta' => ['microsoft_id' => $microsoftUser['id']],
-                    ]);
-                    
-                    return redirect('/employee/dashboard');
-                } else {
-                    // User exists but was created by admin, don't allow Microsoft login
-                    return redirect('/')->with('error', 'This email is already registered as an admin account. Please use the regular login.');
+                if ($user->account_source !== 'microsoft_login') {
+                    return redirect('/')
+                        ->with('error', 'This email is already registered as an admin account. Please use the regular login.');
                 }
             } else {
                 // Create new user and employee
                 return $this->createMicrosoftUser($microsoftUser, $request);
             }
+
+            Auth::login($user);
+
+            UserLog::create([
+                                'user_id' => $user->id,
+                                'type' => 'microsoft_login',
+                                'ip' => $request->ip(),
+                                'user_agent' => (string) $request->userAgent(),
+                                'meta' => ['microsoft_id' => $microsoftUser['id'] ?? null],
+                            ]);
+
+            return redirect()->intended('/employee/dashboard');
         } catch (\Exception $e) {
-            dd('Microsoft OAuth Error: ' . $e->getMessage());
             Log::error('Microsoft OAuth Error: ' . $e->getMessage());
             return redirect('/')->with('error', 'Microsoft login failed. Please try again.');
         }
@@ -111,19 +122,19 @@ class MicrosoftAuthController extends Controller
     private function createMicrosoftUser($microsoftUser, Request $request)
     {
         DB::beginTransaction();
-        
+
         try {
             // Get default department and designation (or create them if they don't exist)
             $defaultDepartment = Department::first();
             $defaultDesignation = Designation::first();
-            
+
             if (!$defaultDepartment) {
                 $defaultDepartment = Department::create([
                     'name' => 'General',
                     'description' => 'Default department for Microsoft login users',
                 ]);
             }
-            
+
             if (!$defaultDesignation) {
                 $defaultDesignation = Designation::create([
                     'name' => 'Employee',
@@ -145,8 +156,9 @@ class MicrosoftAuthController extends Controller
             // Generate employee code
             $employeeCode = 'EMP' . str_pad(Employee::count() + 1, 4, '0', STR_PAD_LEFT);
 
-            // Create employee record
+            // Create employee record linked to user
             $employee = Employee::create([
+                'user_id' => $user->id, // Link employee to user
                 'first_name' => $this->extractFirstName($microsoftUser['displayName'] ?? 'Microsoft User'),
                 'last_name' => $this->extractLastName($microsoftUser['displayName'] ?? 'Microsoft User'),
                 'email' => $microsoftUser['mail'] ?? $microsoftUser['userPrincipalName'],
@@ -176,11 +188,33 @@ class MicrosoftAuthController extends Controller
             // Login the user
             Auth::login($user);
 
+            // For SPA, return JSON response or redirect to frontend
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Welcome! Your account has been created successfully.',
+                    'user' => $user,
+                    'employee' => $employee,
+                    'redirect' => '/employee/dashboard'
+                ]);
+            }
+
             return redirect('/employee/dashboard')->with('success', 'Welcome! Your account has been created successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Microsoft User Creation Error: ' . $e->getMessage());
+            Log::error('Microsoft User Creation Error: ' . $e->getMessage(), [
+                'microsoft_user' => $microsoftUser,
+                'error' => $e->getTraceAsString()
+            ]);
+
+            if ($request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create account. Please try again.'
+                ], 500);
+            }
+
             return redirect('/')->with('error', 'Failed to create account. Please try again.');
         }
     }

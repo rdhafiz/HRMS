@@ -31,6 +31,12 @@ use App\Http\Controllers\Api\EmployeeProfileController;
 |
 */
 
+// Microsoft OAuth API routes (for SPA)
+Route::middleware(['web', 'secure.microsoft'])->prefix('auth')->group(function () {
+    Route::get('/microsoft', [App\Http\Controllers\Auth\MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('api.login.microsoft');
+    Route::get('/microsoft/callback', [App\Http\Controllers\Auth\MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('api.login.microsoft.callback');
+});
+
 // Auth endpoints
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
@@ -49,7 +55,6 @@ Route::prefix('auth')->group(function () {
         Route::post('/profile/change-password', [ProfileController::class, 'changePassword']);
     });
 });
-
 
 // Admins Management (System Admin only)
 Route::middleware(['auth:sanctum', 'role:system_admin'])->prefix('admins')->group(function () {
@@ -191,7 +196,7 @@ Route::middleware(['auth:sanctum', 'throttle.custom:api'])->prefix('email-notifi
     Route::get('/departments', [EmailNotificationController::class, 'getDepartments']);
     Route::get('/employees', [EmailNotificationController::class, 'getEmployees']);
     Route::get('/{id}', [EmailNotificationController::class, 'show']);
-    
+
     Route::middleware('role:system_admin|hr_manager')->group(function () {
         Route::post('/', [EmailNotificationController::class, 'store']);
     });
