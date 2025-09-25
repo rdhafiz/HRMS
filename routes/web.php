@@ -15,8 +15,10 @@ use App\Http\Controllers\Auth\MicrosoftAuthController;
 */
 
 // Microsoft OAuth routes (web routes for redirects)
-Route::get('/auth/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft']);
-Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback']);
+Route::middleware(['secure.microsoft'])->group(function () {
+    Route::get('/auth/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('login.microsoft');
+    Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('login.microsoft.callback');
+});
 
 // Route::get('/', function () {
 //     return view('welcome');

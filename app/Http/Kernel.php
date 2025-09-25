@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'throttle.custom' => \App\Http\Middleware\CustomThrottleMiddleware::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\EnsureRole::class,
+        'secure.microsoft' => \App\Http\Middleware\SecureMicrosoftAuth::class,
     ];
 }
