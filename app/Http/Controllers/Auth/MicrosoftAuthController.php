@@ -99,7 +99,7 @@ class MicrosoftAuthController extends Controller
                 }
             } else {
                 // Create new user and employee
-                return $this->createMicrosoftUser($microsoftUser, $request);
+                $user = $this->createMicrosoftUser($microsoftUser, $request);
             }
 
             Auth::login($user);
@@ -114,6 +114,7 @@ class MicrosoftAuthController extends Controller
 
             return redirect()->intended('/employee/dashboard');
         } catch (\Exception $e) {
+            dd($e->getMessage());
             Log::error('Microsoft OAuth Error: ' . $e->getMessage());
             return redirect('/')->with('error', 'Microsoft login failed. Please try again.');
         }
@@ -124,23 +125,6 @@ class MicrosoftAuthController extends Controller
         DB::beginTransaction();
 
         try {
-            // Get default department and designation (or create them if they don't exist)
-            $defaultDepartment = Department::first();
-            $defaultDesignation = Designation::first();
-
-            if (!$defaultDepartment) {
-                $defaultDepartment = Department::create([
-                    'name' => 'General',
-                    'description' => 'Default department for Microsoft login users',
-                ]);
-            }
-
-            if (!$defaultDesignation) {
-                $defaultDesignation = Designation::create([
-                    'name' => 'Employee',
-                    'description' => 'Default designation for Microsoft login users',
-                ]);
-            }
 
             // Create user
             $user = User::create([
@@ -164,11 +148,12 @@ class MicrosoftAuthController extends Controller
                 'email' => $microsoftUser['mail'] ?? $microsoftUser['userPrincipalName'],
                 'employee_code' => $employeeCode,
                 'join_date' => now()->toDateString(),
-                'department_id' => $defaultDepartment->id,
-                'designation_id' => $defaultDesignation->id,
+                'department_id' => 0,
+                'designation_id' => 0,
                 'status' => 'active',
                 'account_source' => 'microsoft_login',
                 'microsoft_id' => $microsoftUser['id'],
+                'created_by' => $user->id
             ]);
 
             // Log the account creation
@@ -185,37 +170,17 @@ class MicrosoftAuthController extends Controller
 
             DB::commit();
 
-            // Login the user
-            Auth::login($user);
-
-            // For SPA, return JSON response or redirect to frontend
-            if ($request->wantsJson() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Welcome! Your account has been created successfully.',
-                    'user' => $user,
-                    'employee' => $employee,
-                    'redirect' => '/employee/dashboard'
-                ]);
-            }
-
-            return redirect('/employee/dashboard')->with('success', 'Welcome! Your account has been created successfully.');
+            return $user;
 
         } catch (\Exception $e) {
+            dd($e->getMessage());
             DB::rollBack();
             Log::error('Microsoft User Creation Error: ' . $e->getMessage(), [
                 'microsoft_user' => $microsoftUser,
                 'error' => $e->getTraceAsString()
             ]);
 
-            if ($request->wantsJson() || $request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to create account. Please try again.'
-                ], 500);
-            }
-
-            return redirect('/')->with('error', 'Failed to create account. Please try again.');
+            return false;
         }
     }
 
