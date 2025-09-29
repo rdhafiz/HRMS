@@ -25,6 +25,7 @@ import Header from '@/components/Header.vue'
 import EmployeeSideNav from '@/components/EmployeeSideNav.vue'
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { clearUserCache } from '@/router'
 
 const user = ref(null)
 
@@ -41,6 +42,14 @@ async function logout() {
   try {
     await axios.post('/auth/logout')
   } finally {
+    // Clear user cache immediately
+    clearUserCache()
+    // Clear any stored form data or local state
+    user.value = null
+    // Clear any browser storage that might contain auth data
+    localStorage.removeItem('user')
+    sessionStorage.clear()
+    // Redirect to login page
     window.location.href = '/'
   }
 }

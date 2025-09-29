@@ -48,21 +48,49 @@ axios.defaults.withCredentials = true
 axios.defaults.baseURL = '/api'
 
 let cachedUser = null
+let userPromise = null
+
 async function getUser() {
+  // If we already have a cached user, return it immediately
   if (cachedUser) return cachedUser
-  const { data } = await axios.get('/auth/user')
-  cachedUser = data
-  return cachedUser
+  
+  // If there's already a request in progress, wait for it
+  if (userPromise) return userPromise
+  
+  // Make the API call and cache the promise
+  userPromise = axios.get('/auth/user').then(({ data }) => {
+    cachedUser = data
+    userPromise = null
+    return data
+  }).catch((error) => {
+    // Clear cache on error
+    cachedUser = null
+    userPromise = null
+    throw error
+  })
+  
+  return userPromise
 }
+
+// Function to clear user cache (useful for logout)
+function clearUserCache() {
+  cachedUser = null
+  userPromise = null
+  // Also clear any axios default headers that might contain auth tokens
+  delete axios.defaults.headers.common['Authorization']
+}
+
+// Export for use in other components
+export { clearUserCache }
 
 const routes = [
   {
     path: '/',
     component: AuthLayout,
     children: [
-      { path: '', name: 'login', component: Login },
-      { path: 'forgot', name: 'forgot', component: ForgotPassword },
-      { path: 'reset', name: 'reset', component: ResetPassword },
+      { path: '', name: 'login', component: Login, meta: { authOnly: true } },
+      { path: 'forgot', name: 'forgot', component: ForgotPassword, meta: { authOnly: true } },
+      { path: 'reset', name: 'reset', component: ResetPassword, meta: { authOnly: true } },
     ],
   },
   {
@@ -140,23 +168,46 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (!to.meta.requiresAuth) return next()
-  try {
-    const user = await getUser()
-    const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR','EMPLOYEE']
-    if (roles.includes(user.admin_type_label)) {
+  // Check if route requires authentication (protected routes)
+  if (to.meta.requiresAuth) {
+    try {
+      const user = await getUser()
+      const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR','EMPLOYEE']
+      if (roles.includes(user.admin_type_label)) {
+        return next()
+      }
+      
+      // Redirect employees to their dashboard if they try to access admin routes
+      if (user.admin_type_label === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      }
+      
+      return next({ name: 'dashboard' })
+    } catch (e) {
+      // Clear cache on authentication error
+      clearUserCache()
+      return next({ name: 'login' })
+    }
+  }
+
+  // Check if route is auth-only (login, forgot password, reset password)
+  if (to.meta.authOnly) {
+    try {
+      const user = await getUser()
+      // User is logged in, redirect to appropriate dashboard
+      if (user.admin_type_label === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      } else {
+        return next({ name: 'dashboard' })
+      }
+    } catch (e) {
+      // User is not logged in, allow access to auth pages
       return next()
     }
-    
-    // Redirect employees to their dashboard if they try to access admin routes
-    if (user.admin_type_label === 'EMPLOYEE') {
-      return next({ name: 'employee.dashboard' })
-    }
-    
-    return next({ name: 'dashboard' })
-  } catch (e) {
-    return next({ name: 'login' })
   }
+
+  // No special requirements, proceed normally
+  return next()
 })
 
 export default router
