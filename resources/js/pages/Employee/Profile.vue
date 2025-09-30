@@ -3,8 +3,26 @@
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 			<!-- Header -->
 			<div class="mb-8">
-				<h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
-				<p class="mt-2 text-gray-600">View your personal information and activity logs</p>
+				<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<h1 class="text-3xl font-bold text-gray-900">My Profile</h1>
+						<p class="mt-2 text-gray-600">View your personal information and activity logs</p>
+					</div>
+					<div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
+						<router-link
+							to="/employee/profile/update"
+							class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-green-600 bg-green-100 hover:bg-green-200 transition-colors"
+						>
+							Update Profile
+						</router-link>
+						<router-link
+							to="/employee/profile/change-password"
+							class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-600 bg-purple-100 hover:bg-purple-200 transition-colors"
+						>
+							Change Password
+						</router-link>
+					</div>
+				</div>
 			</div>
 
 			<!-- Loading State -->

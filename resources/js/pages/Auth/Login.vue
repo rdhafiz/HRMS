@@ -86,6 +86,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { clearUserCache } from '@/router'
 
 const email = ref('admin@example.com')
 const password = ref('password123')
@@ -104,8 +105,18 @@ async function submit() {
   loading.value = true
   try {
     await axios.get('/sanctum/csrf-cookie')
-    await axios.post('/auth/login', { email: email.value, password: password.value })
-    window.location.href = '/dashboard'
+    const response = await axios.post('/auth/login', { email: email.value, password: password.value })
+    
+    // Clear user cache to ensure fresh authentication state
+    clearUserCache()
+    
+    // Check user role and redirect appropriately
+    const user = response.data
+    if (user.admin_type_label === 'EMPLOYEE') {
+      window.location.href = '/employee/dashboard'
+    } else {
+      window.location.href = '/dashboard'
+    }
   } catch (e) {
     error.value = e?.response?.data?.message || 'Login failed'
   } finally {
