@@ -1,11 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -17,11 +19,11 @@ class AuthController extends Controller
             'password' => ['required', 'string', 'min:8'],
         ]);
 
-        $credentials = ['email' => $validated['email'], 'password' => $validated['password']];
+        $user = User::where('email', $validated['email'])->first();
 
-        if (!Auth::attempt($credentials, true)) {
+        if (!$user || !Hash::check($validated['password'], $user->password)) {
             UserLog::create([
-                'user_id' => optional(User::where('email', $validated['email'])->first())->id,
+                'user_id' => $user?->id,
                 'type' => 'failed_login',
                 'ip' => $request->ip(),
                 'user_agent' => (string) $request->userAgent(),
@@ -33,9 +35,11 @@ class AuthController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
+        // Revoke all existing tokens for this user
+        $user->tokens()->delete();
 
-        $user = $request->user();
+        // Create new token
+        $token = $user->createToken('auth-token')->plainTextToken;
 
         UserLog::create([
             'user_id' => $user->id,
@@ -45,7 +49,11 @@ class AuthController extends Controller
             'meta' => null,
         ]);
 
-        return response()->json($user);
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'token_type' => 'Bearer'
+        ]);
     }
 
     public function user(Request $request)
@@ -56,19 +64,35 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $user = $request->user();
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
+        
         UserLog::create([
-            'user_id' => optional($user)->id,
+            'user_id' => $user->id,
             'type' => 'logout',
             'ip' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
             'meta' => null,
         ]);
 
-        return response()->json(['message' => 'Logged out']);
+        // Revoke the current token
+        $request->user()->currentAccessToken()->delete();
+
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    public function refresh(Request $request)
+    {
+        $user = $request->user();
+        
+        // Revoke current token
+        $request->user()->currentAccessToken()->delete();
+        
+        // Create new token
+        $token = $user->createToken('auth-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+            'token_type' => 'Bearer'
+        ]);
     }
 }
-

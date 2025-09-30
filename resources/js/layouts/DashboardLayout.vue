@@ -24,37 +24,28 @@
 <script setup>
 import Header from '@/components/Header.vue'
 import SideNav from '@/components/SideNav.vue'
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { clearUserCache } from '@/router'
+import { computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-const user = ref(null)
+const authStore = useAuthStore()
+const router = useRouter()
 
-async function fetchUser() {
-  try {
-    const { data } = await axios.get('/auth/user')
-    user.value = data
-  } catch (e) {
-    user.value = null
-  }
-}
+const user = computed(() => authStore.user)
 
 async function logout() {
-  try {
-    await axios.post('/auth/logout')
-  } finally {
-    // Clear user cache immediately
-    clearUserCache()
-    // Clear any stored form data or local state
-    user.value = null
-    // Clear any browser storage that might contain auth data
-    localStorage.removeItem('user')
-    sessionStorage.clear()
-    // Redirect to login page
-    window.location.href = '/'
-  }
+  await authStore.logout()
+  router.push({ name: 'login' })
 }
 
-onMounted(fetchUser)
+onMounted(async () => {
+  if (!authStore.user && authStore.token) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      // Token is invalid, user will be redirected by router guard
+    }
+  }
+})
 </script>
 

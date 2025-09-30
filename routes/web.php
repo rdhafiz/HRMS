@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\MicrosoftAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,16 +12,6 @@ use App\Http\Controllers\Auth\MicrosoftAuthController;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-
-// Microsoft OAuth routes (web routes for redirects)
-Route::middleware(['secure.microsoft'])->group(function () {
-    Route::get('/auth/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('login.microsoft');
-    Route::get('/auth/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('login.microsoft.callback');
-});
-
-// Route::get('/', function () {
-//     return view('welcome');
-// });
 
 // SPA catch-all to serve the Vue app
 Route::view('/{any}', 'app')->where('any', '.*');
