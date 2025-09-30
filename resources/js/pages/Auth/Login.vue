@@ -67,9 +67,44 @@
           </button>
         </form>
 
-        <p class="text-xs text-gray-500 mt-6 text-center">
-          Unable to login? Kindly connect with <a href="#" class="underline">IT Support Team</a>
-        </p>
+        <!-- Divider -->
+        <div class="relative my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <!-- Microsoft Login Button -->
+        <div class="space-y-3">
+          <button 
+            @click="loginWithMicrosoft" 
+            :disabled="microsoftLoading"
+            class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:shadow-md"
+          >
+            <!-- Microsoft Logo -->
+            <div v-if="!microsoftLoading" class="w-5 h-5 mr-3 flex-shrink-0">
+              <svg viewBox="0 0 23 23" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+                <rect x="12" y="1" width="10" height="10" fill="#7FBA00"/>
+                <rect x="1" y="12" width="10" height="10" fill="#00A4EF"/>
+                <rect x="12" y="12" width="10" height="10" fill="#FFB900"/>
+              </svg>
+            </div>
+            
+            <!-- Microsoft Loading Animation -->
+            <div v-else class="w-5 h-5 mr-3 flex-shrink-0 relative">
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            </div>
+            
+            <span v-if="!microsoftLoading" class="text-gray-700 font-medium">Continue with Microsoft</span>
+            <span v-else class="text-gray-500">Connecting to Microsoft...</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -88,7 +123,7 @@ const email = ref('admin@example.com')
 const password = ref('password123')
 const error = ref('')
 const success = ref('')
-const showPassword = ref(false)
+const microsoftLoading = ref(false)
 
 const appName = computed(() => import.meta.env.VITE_APP_NAME || 'HR Portal')
 const notice = computed(() => route.query.notice)
@@ -112,5 +147,13 @@ async function handleLogin() {
   } else {
     error.value = result.message
   }
+}
+
+function loginWithMicrosoft() {
+  microsoftLoading.value = true
+  error.value = ''
+  
+  // Redirect to Microsoft OAuth
+  window.location.href = '/auth/microsoft'
 }
 </script>

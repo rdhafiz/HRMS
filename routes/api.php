@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\MicrosoftAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DesignationController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\PaySlipController;
 use App\Http\Controllers\Api\EmployeeProfileController;
+use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\LeaveRequestController;
 
 /*
@@ -28,6 +30,12 @@ use App\Http\Controllers\Api\LeaveRequestController;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
+
+// Microsoft OAuth API routes (for SPA)
+Route::middleware(['web', 'secure.microsoft'])->prefix('auth')->group(function () {
+    Route::get('/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('api.login.microsoft');
+    Route::get('/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('api.login.microsoft.callback');
+});
 
 // Authentication endpoints
 Route::prefix('auth')->group(function () {

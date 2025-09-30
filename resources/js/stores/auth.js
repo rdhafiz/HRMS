@@ -125,10 +125,29 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from localStorage and URL parameters
   function initializeAuth() {
     if (token.value) {
       axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+    }
+    
+    // Check for Microsoft OAuth token in URL
+    const urlParams = new URLSearchParams(window.location.search)
+    const microsoftToken = urlParams.get('token')
+    
+    if (microsoftToken) {
+      // Store the Microsoft OAuth token
+      token.value = microsoftToken
+      localStorage.setItem('auth_token', microsoftToken)
+      axios.defaults.headers.common['Authorization'] = `Bearer ${microsoftToken}`
+      
+      // Clean up URL
+      const url = new URL(window.location)
+      url.searchParams.delete('token')
+      window.history.replaceState({}, document.title, url.pathname + url.search)
+      
+      // Fetch user data
+      fetchUser()
     }
   }
 
