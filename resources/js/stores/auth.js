@@ -69,6 +69,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  // Check if user is properly authenticated with valid token
+  async function checkAuthStatus() {
+    if (!token.value) {
+      return false
+    }
+    
+    try {
+      await fetchUser()
+      return true
+    } catch (error) {
+      return false
+    }
+  }
+
   async function refreshToken() {
     if (!token.value) return null
     
@@ -165,6 +179,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     fetchUser,
+    checkAuthStatus,
     refreshToken,
     forgotPassword,
     verifyResetCode,

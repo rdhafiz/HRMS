@@ -20,8 +20,8 @@ window.axios.interceptors.response.use(
       const authStore = useAuthStore();
       await authStore.logout();
       
-      // Redirect to login if not already there
-      if (window.location.pathname !== '/') {
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/' && !window.location.pathname.includes('/forgot') && !window.location.pathname.includes('/reset')) {
         window.location.href = '/';
       }
     }

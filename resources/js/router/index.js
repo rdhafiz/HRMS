@@ -121,6 +121,11 @@ const routes = [
       // Add more employee routes here as needed
     ],
   },
+  // Catch-all route for undefined routes - redirect to login
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: { name: 'login' }
+  }
 ]
 
 const router = createRouter({
@@ -131,21 +136,42 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   
+  // Initialize auth state if not already done
+  if (!authStore.user && authStore.token) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      // Token is invalid, clear auth state
+      await authStore.logout()
+    }
+  }
+  
+  // Check if route is guest-only (login, forgot password, reset password)
+  if (to.meta.guestOnly) {
+    // If user is authenticated, redirect to appropriate dashboard
+    if (authStore.isAuthenticated) {
+      if (authStore.userRole === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      } else {
+        return next({ name: 'dashboard' })
+      }
+    }
+    
+    // User is not authenticated, allow access to auth pages
+    return next()
+  }
+  
   // Check if route requires authentication
   if (to.meta.requiresAuth) {
+    // If user is not authenticated, redirect to login
     if (!authStore.isAuthenticated) {
-      // Try to fetch user if token exists
-      if (authStore.token) {
-        try {
-          await authStore.fetchUser()
-        } catch (error) {
-          // Token is invalid, redirect to login
-          return next({ name: 'login' })
-        }
-      } else {
-        // No token, redirect to login
-        return next({ name: 'login' })
-      }
+      return next({ name: 'login' })
+    }
+    
+    // Double-check authentication status with server
+    const isAuthenticated = await authStore.checkAuthStatus()
+    if (!isAuthenticated) {
+      return next({ name: 'login' })
     }
     
     // Check role-based access
@@ -162,22 +188,8 @@ router.beforeEach(async (to, from, next) => {
     return next()
   }
   
-  // Check if route is guest-only (login, forgot password, reset password)
-  if (to.meta.guestOnly) {
-    if (authStore.isAuthenticated) {
-      // User is logged in, redirect to appropriate dashboard
-      if (authStore.userRole === 'EMPLOYEE') {
-        return next({ name: 'employee.dashboard' })
-      } else {
-        return next({ name: 'dashboard' })
-      }
-    }
-    
-    return next()
-  }
-  
-  // No special requirements, proceed normally
-  return next()
+  // For any other routes (shouldn't happen with current setup), redirect to login
+  return next({ name: 'login' })
 })
 
 export default router
