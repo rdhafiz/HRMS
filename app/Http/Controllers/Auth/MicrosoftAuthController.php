@@ -22,7 +22,7 @@ class MicrosoftAuthController extends Controller
     {
         $clientId = config('services.microsoft.client_id');
         $redirectUri = config('services.microsoft.redirect');
-        $tenant     = config('services.microsoft.tenant', 'common');
+        $tenant = config('services.microsoft.tenant', 'common');
         $state = Str::random(40);
 
         session(['microsoft_oauth_state' => $state]);
@@ -56,7 +56,7 @@ class MicrosoftAuthController extends Controller
             }
             session()->forget('microsoft_oauth_state');
 
-            // Exchange code for token - Fix the URL interpolation
+            // Exchange code for token
             $tenant = config('services.microsoft.tenant', 'common');
             $tokenResponse = Http::asForm()->post("https://login.microsoftonline.com/{$tenant}/oauth2/v2.0/token", [
                 'client_id' => config('services.microsoft.client_id'),
@@ -94,27 +94,32 @@ class MicrosoftAuthController extends Controller
 
             if ($user) {
                 if ($user->account_source !== 'microsoft_login') {
-                    return redirect('/')
-                        ->with('error', 'This email is already registered as an admin account. Please use the regular login.');
+                    return redirect('/')->with('error', 'This email is already registered as an admin account. Please use the regular login.');
                 }
             } else {
                 // Create new user and employee
                 $user = $this->createMicrosoftUser($microsoftUser, $request);
             }
 
-            Auth::login($user);
+            // Create Sanctum token for the user
+            $token = $user->createToken('microsoft-auth-token')->plainTextToken;
 
             UserLog::create([
-                                'user_id' => $user->id,
-                                'type' => 'microsoft_login',
-                                'ip' => $request->ip(),
-                                'user_agent' => (string) $request->userAgent(),
-                                'meta' => ['microsoft_id' => $microsoftUser['id'] ?? null],
-                            ]);
+                'user_id' => $user->id,
+                'type' => 'microsoft_login',
+                'ip' => $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+                'meta' => ['microsoft_id' => $microsoftUser['id'] ?? null],
+            ]);
 
-            return redirect()->intended('/employee/dashboard');
+            // Redirect to frontend with token
+            $redirectUrl = $user->admin_type_label === 'EMPLOYEE' 
+                ? '/employee/dashboard' 
+                : '/dashboard';
+            
+            return redirect($redirectUrl . '?token=' . $token);
+
         } catch (\Exception $e) {
-            dd($e->getMessage());
             Log::error('Microsoft OAuth Error: ' . $e->getMessage());
             return redirect('/')->with('error', 'Microsoft login failed. Please try again.');
         }
@@ -125,7 +130,6 @@ class MicrosoftAuthController extends Controller
         DB::beginTransaction();
 
         try {
-
             // Create user
             $user = User::create([
                 'name' => $microsoftUser['displayName'] ?? 'Microsoft User',
@@ -173,14 +177,13 @@ class MicrosoftAuthController extends Controller
             return $user;
 
         } catch (\Exception $e) {
-            dd($e->getMessage());
             DB::rollBack();
             Log::error('Microsoft User Creation Error: ' . $e->getMessage(), [
                 'microsoft_user' => $microsoftUser,
                 'error' => $e->getTraceAsString()
             ]);
 
-            return false;
+            throw $e;
         }
     }
 

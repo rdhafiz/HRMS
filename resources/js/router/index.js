@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 import Login from '../pages/Auth/Login.vue'
 import ForgotPassword from '../pages/Auth/ForgotPassword.vue'
@@ -44,53 +44,14 @@ import EmployeeAttendanceHistory from '../pages/Employee/AttendanceHistory.vue'
 import ApplyLeave from '../pages/Employee/Leave/ApplyLeave.vue'
 import LeaveHistory from '../pages/Employee/Leave/LeaveHistory.vue'
 
-axios.defaults.withCredentials = true
-axios.defaults.baseURL = '/api'
-
-let cachedUser = null
-let userPromise = null
-
-async function getUser() {
-  // If we already have a cached user, return it immediately
-  if (cachedUser) return cachedUser
-  
-  // If there's already a request in progress, wait for it
-  if (userPromise) return userPromise
-  
-  // Make the API call and cache the promise
-  userPromise = axios.get('/auth/user').then(({ data }) => {
-    cachedUser = data
-    userPromise = null
-    return data
-  }).catch((error) => {
-    // Clear cache on error
-    cachedUser = null
-    userPromise = null
-    throw error
-  })
-  
-  return userPromise
-}
-
-// Function to clear user cache (useful for logout)
-function clearUserCache() {
-  cachedUser = null
-  userPromise = null
-  // Also clear any axios default headers that might contain auth tokens
-  delete axios.defaults.headers.common['Authorization']
-}
-
-// Export for use in other components
-export { clearUserCache }
-
 const routes = [
   {
     path: '/',
     component: AuthLayout,
     children: [
-      { path: '', name: 'login', component: Login, meta: { authOnly: true } },
-      { path: 'forgot', name: 'forgot', component: ForgotPassword, meta: { authOnly: true } },
-      { path: 'reset', name: 'reset', component: ResetPassword, meta: { authOnly: true } },
+      { path: '', name: 'login', component: Login, meta: { guestOnly: true } },
+      { path: 'forgot', name: 'forgot', component: ForgotPassword, meta: { guestOnly: true } },
+      { path: 'reset', name: 'reset', component: ResetPassword, meta: { guestOnly: true } },
     ],
   },
   {
@@ -160,6 +121,11 @@ const routes = [
       // Add more employee routes here as needed
     ],
   },
+  // Catch-all route for undefined routes - redirect to login
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: { name: 'login' }
+  }
 ]
 
 const router = createRouter({
@@ -168,47 +134,62 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  // Check if route requires authentication (protected routes)
-  if (to.meta.requiresAuth) {
+  const authStore = useAuthStore()
+  
+  // Initialize auth state if not already done
+  if (!authStore.user && authStore.token) {
     try {
-      const user = await getUser()
-      const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR','EMPLOYEE']
-      if (roles.includes(user.admin_type_label)) {
-        return next()
-      }
-      
-      // Redirect employees to their dashboard if they try to access admin routes
-      if (user.admin_type_label === 'EMPLOYEE') {
-        return next({ name: 'employee.dashboard' })
-      }
-      
-      return next({ name: 'dashboard' })
-    } catch (e) {
-      // Clear cache on authentication error
-      clearUserCache()
-      return next({ name: 'login' })
+      await authStore.fetchUser()
+    } catch (error) {
+      // Token is invalid, clear auth state
+      await authStore.logout()
     }
   }
-
-  // Check if route is auth-only (login, forgot password, reset password)
-  if (to.meta.authOnly) {
-    try {
-      const user = await getUser()
-      // User is logged in, redirect to appropriate dashboard
-      if (user.admin_type_label === 'EMPLOYEE') {
+  
+  // Check if route is guest-only (login, forgot password, reset password)
+  if (to.meta.guestOnly) {
+    // If user is authenticated, redirect to appropriate dashboard
+    if (authStore.isAuthenticated) {
+      if (authStore.userRole === 'EMPLOYEE') {
         return next({ name: 'employee.dashboard' })
       } else {
         return next({ name: 'dashboard' })
       }
-    } catch (e) {
-      // User is not logged in, allow access to auth pages
-      return next()
     }
+    
+    // User is not authenticated, allow access to auth pages
+    return next()
   }
-
-  // No special requirements, proceed normally
-  return next()
+  
+  // Check if route requires authentication
+  if (to.meta.requiresAuth) {
+    // If user is not authenticated, redirect to login
+    if (!authStore.isAuthenticated) {
+      return next({ name: 'login' })
+    }
+    
+    // Double-check authentication status with server
+    const isAuthenticated = await authStore.checkAuthStatus()
+    if (!isAuthenticated) {
+      return next({ name: 'login' })
+    }
+    
+    // Check role-based access
+    if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
+      // Redirect employees to their dashboard if they try to access admin routes
+      if (authStore.userRole === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      }
+      
+      // Redirect other users to their appropriate dashboard
+      return next({ name: 'dashboard' })
+    }
+    
+    return next()
+  }
+  
+  // For any other routes (shouldn't happen with current setup), redirect to login
+  return next({ name: 'login' })
 })
 
 export default router
-

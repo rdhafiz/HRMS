@@ -2,23 +2,23 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\Auth\MicrosoftAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\DesignationController;
 use App\Http\Controllers\Api\AttendanceController;
-use App\Http\Controllers\Api\LeaveRequestController;
 use App\Http\Controllers\Api\HolidayController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SalaryStructureController;
 use App\Http\Controllers\Api\EmployeeSalaryStructureController;
-use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\BrandingController;
 use App\Http\Controllers\Api\PaySlipController;
-use App\Http\Controllers\Api\EmailNotificationController;
 use App\Http\Controllers\Api\EmployeeProfileController;
+use App\Http\Controllers\Api\EmployeeController;
+use App\Http\Controllers\Api\LeaveRequestController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,11 +33,11 @@ use App\Http\Controllers\Api\EmployeeProfileController;
 
 // Microsoft OAuth API routes (for SPA)
 Route::middleware(['web', 'secure.microsoft'])->prefix('auth')->group(function () {
-    Route::get('/microsoft', [App\Http\Controllers\Auth\MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('api.login.microsoft');
-    Route::get('/microsoft/callback', [App\Http\Controllers\Auth\MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('api.login.microsoft.callback');
+    Route::get('/microsoft', [MicrosoftAuthController::class, 'redirectToMicrosoft'])->name('api.login.microsoft');
+    Route::get('/microsoft/callback', [MicrosoftAuthController::class, 'handleMicrosoftCallback'])->name('api.login.microsoft.callback');
 });
 
-// Auth endpoints
+// Authentication endpoints
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
     Route::post('/forgot', [PasswordResetController::class, 'sendResetCode'])->middleware('throttle:password-reset');
@@ -47,6 +47,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle.custom:api'])->group(function () {
         Route::get('/user', [AuthController::class, 'user']);
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::post('/refresh', [AuthController::class, 'refresh']);
 
         // Profile
         Route::get('/profile', [ProfileController::class, 'show']);

@@ -17,14 +17,26 @@
         <div class="mb-6">
           <h1 class="text-2xl font-semibold tracking-tight"><span class="text-cyan-500">HR</span> PORTAL</h1>
         </div>
-        <form @submit.prevent="submit" class="space-y-4">
+        <form @submit.prevent="handleForgotPassword" class="space-y-4">
           <p v-if="message" class="text-green-700 text-sm">{{ message }}</p>
           <p v-if="error" class="text-red-600 text-sm">{{ error }}</p>
           <div>
             <label class="block text-sm text-gray-600 mb-1">Email</label>
-            <input v-model="email" type="email" placeholder="you@company.com" class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" required />
+            <input 
+              v-model="email" 
+              type="email" 
+              placeholder="you@company.com" 
+              class="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500" 
+              required 
+            />
           </div>
-          <button :disabled="loading" class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg disabled:opacity-50 transition">Send reset code</button>
+          <button 
+            :disabled="authStore.isLoading" 
+            class="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-2 rounded-lg disabled:opacity-50 transition"
+          >
+            <span v-if="authStore.isLoading">Sending...</span>
+            <span v-else>Send reset code</span>
+          </button>
         </form>
 
         <div class="flex items-center justify-between mt-4 text-sm">
@@ -32,7 +44,9 @@
           <router-link to="/reset" class="text-cyan-600 hover:text-cyan-700">Have a code? Reset now</router-link>
         </div>
 
-        <p class="text-xs text-gray-500 mt-6 text-center">Need help? Contact <a href="#" class="underline">IT Support Team</a></p>
+        <p class="text-xs text-gray-500 mt-6 text-center">
+          Need help? Contact <a href="#" class="underline">IT Support Team</a>
+        </p>
       </div>
     </div>
   </div>
@@ -41,29 +55,27 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const router = useRouter()
 
 const email = ref('admin@example.com')
 const message = ref('')
 const error = ref('')
-const loading = ref(false)
-const router = useRouter()
 
-async function submit() {
+async function handleForgotPassword() {
   message.value = ''
   error.value = ''
-  loading.value = true
-  try {
-    await axios.get('/sanctum/csrf-cookie')
-    const { data } = await axios.post('/auth/forgot', { email: email.value })
+  
+  const result = await authStore.forgotPassword(email.value)
+  
+  if (result.success) {
     const notice = 'A 6-digit reset code has been sent to your email. Use it to reset your password.'
     message.value = notice
     router.push({ name: 'reset', query: { notice } })
-  } catch (e) {
-    error.value = e?.response?.data?.message || 'Request failed'
-  } finally {
-    loading.value = false
+  } else {
+    error.value = result.message
   }
 }
 </script>
-
