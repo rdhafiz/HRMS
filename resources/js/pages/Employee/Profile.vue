@@ -16,6 +16,7 @@
 							Update Profile
 						</router-link>
 						<router-link
+							v-if="!isMicrosoftUser"
 							to="/employee/profile/change-password"
 							class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-purple-600 bg-purple-100 hover:bg-purple-200 transition-colors"
 						>
@@ -291,7 +292,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import {
 	UserIcon,
@@ -307,6 +308,11 @@ const error = ref(null)
 const employee = ref(null)
 const activityLogs = ref([])
 const pagination = ref(null)
+
+// Check if user is a Microsoft user
+const isMicrosoftUser = computed(() => {
+	return employee.value?.account_source === 'microsoft_login' && employee.value?.microsoft_id !== null
+})
 
 const loadProfile = async () => {
 	try {

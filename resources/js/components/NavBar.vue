@@ -17,7 +17,7 @@
           </div>
           <div class="py-1 text-sm">
             <a href="#" class="block px-3 py-2 hover:bg-gray-50">Profile</a>
-            <a href="#" class="block px-3 py-2 hover:bg-gray-50">Change Password</a>
+            <a v-if="!isMicrosoftUser" href="#" class="block px-3 py-2 hover:bg-gray-50">Change Password</a>
             <a href="#" class="block px-3 py-2 hover:bg-gray-50">Settings</a>
             <button @click="$emit('logout')" class="w-full text-left px-3 py-2 hover:bg-gray-50">Logout</button>
           </div>
@@ -32,6 +32,11 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 const props = defineProps({ user: Object })
 const open = ref(false)
 const avatar = computed(() => props.user?.avatar || 'https://via.placeholder.com/80x80.png?text=👤')
+
+// Check if user is a Microsoft user
+const isMicrosoftUser = computed(() => {
+  return props.user?.account_source === 'microsoft_login' && props.user?.microsoft_id !== null
+})
 
 function onClick(e) {
   const el = e.target.closest('[data-dropdown]')

@@ -61,6 +61,11 @@ class User extends Authenticatable
         return $this->hasMany(UserLog::class);
     }
 
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id');
+    }
+
     public function getAdminTypeLabelAttribute(): string
     {
         return strtoupper(str_replace('_',' ',UserRoles::label((int) $this->admin_type)));

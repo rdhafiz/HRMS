@@ -153,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
 import {
@@ -164,6 +164,27 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+
+// Check if user is Microsoft user and redirect if so
+const checkMicrosoftUser = async () => {
+	try {
+		const { data } = await axios.get('/employee/profile')
+		if (data.user?.account_source === 'microsoft_login' && data.user?.microsoft_id !== null) {
+			// Redirect Microsoft users to profile page
+			router.push({ name: 'employee.profile' })
+			return
+		}
+	} catch (error) {
+		console.error('Error checking user type:', error)
+		// If there's an error, redirect to profile as well
+		router.push({ name: 'employee.profile' })
+	}
+}
+
+// Check on component mount
+onMounted(() => {
+	checkMicrosoftUser()
+})
 
 const submitting = ref(false)
 const errors = ref({})

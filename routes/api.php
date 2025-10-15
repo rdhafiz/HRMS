@@ -19,6 +19,9 @@ use App\Http\Controllers\Api\PaySlipController;
 use App\Http\Controllers\Api\EmployeeProfileController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\LeaveRequestController;
+use App\Http\Controllers\Api\TrainingAndPolicyController;
+use App\Http\Controllers\Api\EmailNotificationController;
+use App\Http\Controllers\Api\TrainingPolicyCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -165,6 +168,25 @@ Route::middleware(['auth:sanctum', 'throttle.custom:api'])->prefix('employment')
         Route::post('pay-slips/{paySlip}/regenerate', [PaySlipController::class, 'regenerate']);
     });
     Route::get('pay-slips/{paySlip}', [PaySlipController::class, 'show']);
+
+    // Training & Policies
+    Route::get('trainings-policies', [TrainingAndPolicyController::class, 'index']);
+    Route::get('trainings-policies/{trainingAndPolicy}', [TrainingAndPolicyController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('trainings-policies', [TrainingAndPolicyController::class, 'store']);
+        Route::put('trainings-policies/{trainingAndPolicy}', [TrainingAndPolicyController::class, 'update']);
+        Route::delete('trainings-policies/{trainingAndPolicy}', [TrainingAndPolicyController::class, 'destroy']);
+    });
+
+    // Training & Policy Categories
+    Route::get('training-policy-categories', [TrainingPolicyCategoryController::class, 'index']);
+    Route::get('training-policy-categories/parents', [TrainingPolicyCategoryController::class, 'getParents']);
+    Route::get('training-policy-categories/{trainingPolicyCategory}', [TrainingPolicyCategoryController::class, 'show']);
+    Route::middleware('role:system_admin|hr_manager')->group(function () {
+        Route::post('training-policy-categories', [TrainingPolicyCategoryController::class, 'store']);
+        Route::put('training-policy-categories/{trainingPolicyCategory}', [TrainingPolicyCategoryController::class, 'update']);
+        Route::delete('training-policy-categories/{trainingPolicyCategory}', [TrainingPolicyCategoryController::class, 'destroy']);
+    });
 });
 
 // Employee Profile (Employee role only)
@@ -173,6 +195,10 @@ Route::middleware(['auth:sanctum', 'role:employee', 'throttle.custom:api'])->pre
     Route::get('/activity-logs', [EmployeeProfileController::class, 'activityLogs']);
     Route::post('/profile', [EmployeeProfileController::class, 'updateProfile']);
     Route::post('/change-password', [EmployeeProfileController::class, 'changePassword']);
+    
+    // Training & Policies
+    Route::get('/training-policies', [App\Http\Controllers\Api\EmployeeTrainingPolicyController::class, 'index']);
+    Route::post('/training-policies/save', [App\Http\Controllers\Api\EmployeeTrainingPolicyController::class, 'save']);
 });
 
 // Employee Holidays (Employee role only)

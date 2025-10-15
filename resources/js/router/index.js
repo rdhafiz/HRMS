@@ -14,6 +14,8 @@ import DesignationForm from '../pages/Employment/Designations/DesignationForm.vu
 import Employees from '../pages/Employment/Employees/Employees.vue'
 import EmployeeForm from '../pages/Employment/Employees/EmployeeForm.vue'
 import EmployeeView from '../pages/Employment/Employees/EmployeeView.vue'
+import TrainingPolicies from '../pages/Employment/TrainingPolicies/Index.vue'
+import TrainingPolicyCategories from '../pages/Employment/TrainingPolicies/CategoryList.vue'
 import DailyAttendance from '../pages/Attendance/DailyAttendance.vue'
 import LeaveRequests from '../pages/Attendance/LeaveRequests.vue'
 import LeaveRequestForm from '../pages/Attendance/LeaveRequestForm.vue'
@@ -41,6 +43,7 @@ import EmployeeUpdateProfile from '../pages/Employee/UpdateProfile.vue'
 import EmployeeChangePassword from '../pages/Employee/ChangePassword.vue'
 import EmployeeHolidayList from '../pages/Employee/HolidayList.vue'
 import EmployeeAttendanceHistory from '../pages/Employee/AttendanceHistory.vue'
+import EmployeeTrainingPolicies from '../pages/Employee/TrainingPolicies/Index.vue'
 import ApplyLeave from '../pages/Employee/Leave/ApplyLeave.vue'
 import LeaveHistory from '../pages/Employee/Leave/LeaveHistory.vue'
 
@@ -71,6 +74,9 @@ const routes = [
       { path: 'employees/create', name: 'employees.create', component: EmployeeForm, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id/edit', name: 'employees.edit', component: EmployeeForm, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id', name: 'employees.view', component: EmployeeView, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Training & Policies
+      { path: 'training-policies', name: 'training-policies', component: TrainingPolicies, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      { path: 'training-policy-categories', name: 'training-policy-categories', component: TrainingPolicyCategories, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       // Attendance
       { path: 'attendance/daily', name: 'attendance.daily', component: DailyAttendance, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'attendance/leaves', name: 'attendance.leaves', component: LeaveRequests, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
@@ -115,6 +121,7 @@ const routes = [
       { path: 'profile/change-password', name: 'employee.profile.change-password', component: EmployeeChangePassword, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
       { path: 'holidays', name: 'employee.holidays', component: EmployeeHolidayList, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
       { path: 'attendance', name: 'employee.attendance', component: EmployeeAttendanceHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'training-policies', name: 'employee.training-policies', component: EmployeeTrainingPolicies, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
       // Leave Management
       { path: 'leaves/apply', name: 'employee.leaves.apply', component: ApplyLeave, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
       { path: 'leaves/history', name: 'employee.leaves.history', component: LeaveHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
@@ -183,6 +190,23 @@ router.beforeEach(async (to, from, next) => {
       
       // Redirect other users to their appropriate dashboard
       return next({ name: 'dashboard' })
+    }
+    
+    // Microsoft Login Middleware: Prevent Microsoft-login employees from accessing Change Password
+    if (authStore.user && 
+        authStore.user.account_source === 'microsoft_login' && 
+        authStore.user.microsoft_id) {
+      
+      // Check if trying to access Change Password routes
+      if (to.name === 'employee.profile.change-password' || to.name === 'profile.password') {
+        // Redirect to appropriate dashboard based on user role
+        const redirectRoute = authStore.userRole === 'EMPLOYEE' ? 'employee.dashboard' : 'dashboard'
+        
+        // Store a message for the user (optional - can be displayed via toast/notification)
+        sessionStorage.setItem('microsoft_login_message', 'You cannot change your password since you logged in using Microsoft account.')
+        
+        return next({ name: redirectRoute })
+      }
     }
     
     return next()

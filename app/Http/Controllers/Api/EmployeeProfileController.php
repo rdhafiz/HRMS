@@ -111,6 +111,14 @@ class EmployeeProfileController extends Controller
     {
         $user = Auth::user();
 
+        // Check if user is a Microsoft user
+        if ($user->account_source === 'microsoft_login' && $user->microsoft_id !== null) {
+            return response()->json([
+                'message' => 'Password change is not available for Microsoft users.',
+                'errors' => ['general' => ['Password change is not available for Microsoft users.']]
+            ], 403);
+        }
+
         $validated = $request->validate([
             'current_password' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
