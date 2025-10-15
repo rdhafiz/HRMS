@@ -26,6 +26,8 @@ class User extends Authenticatable
         'admin_type',
         'reset_code',
         'reset_code_sent_at',
+        'account_source',
+        'microsoft_id',
     ];
 
     /**
@@ -57,6 +59,11 @@ class User extends Authenticatable
     public function logs()
     {
         return $this->hasMany(UserLog::class);
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(Employee::class, 'user_id');
     }
 
     public function getAdminTypeLabelAttribute(): string

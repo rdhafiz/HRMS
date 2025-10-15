@@ -183,7 +183,7 @@ class PaySlipRegenerateTest extends TestCase
     public function test_regenerate_pay_slip_not_found()
     {
         $response = $this->actingAs($this->adminUser, 'sanctum')
-            ->getJson('/api/employment/pay-slips/99999/regenerate');
+            ->getJson('/employment/pay-slips/99999/regenerate');
 
         $response->assertStatus(404);
     }

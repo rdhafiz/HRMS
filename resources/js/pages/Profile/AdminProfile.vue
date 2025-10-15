@@ -14,7 +14,7 @@
 
     <div class="flex items-center gap-3">
       <router-link class="px-3 py-2 bg-indigo-600 text-white rounded" :to="{ name: 'profile.update' }">Update Profile</router-link>
-      <router-link class="px-3 py-2 bg-slate-700 text-white rounded" :to="{ name: 'profile.password' }">Change Password</router-link>
+      <router-link v-if="!isMicrosoftUser" class="px-3 py-2 bg-slate-700 text-white rounded" :to="{ name: 'profile.password' }">Change Password</router-link>
     </div>
 
     <div class="bg-white border rounded">
@@ -54,11 +54,16 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import axios from 'axios'
 
 const profile = ref(null)
 const logs = ref(null)
+
+// Check if user is a Microsoft user
+const isMicrosoftUser = computed(() => {
+  return profile.value?.user?.account_source === 'microsoft_login' && profile.value?.user?.microsoft_id !== null
+})
 
 function formatDate(value) {
   return new Date(value).toLocaleString()

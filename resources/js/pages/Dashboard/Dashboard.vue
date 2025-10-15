@@ -1,142 +1,86 @@
 <template>
-  <div class="min-h-screen p-6 space-y-6">
-    <div>
-      <h1 class="text-2xl font-semibold">Welcome Back, {{ user?.name || 'User' }} 👋</h1>
-      <p class="text-sm text-gray-500">{{ user?.admin_type_label || 'Admin Profile' }}</p>
-    </div>
-
-    <!-- Top KPI cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm text-gray-500">Total Employees</div>
-        <div class="text-2xl font-semibold">200<span class="text-sm text-gray-400">/200</span></div>
-        <div class="text-emerald-600 text-xs mt-1">▲ +15%</div>
-      </div>
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm text-gray-500">On Leaves</div>
-        <div class="text-2xl font-semibold">20<span class="text-sm text-gray-400">/200</span></div>
-        <div class="text-rose-600 text-xs mt-1">▼ -10%</div>
-      </div>
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm text-gray-500">New Joinee</div>
-        <div class="text-2xl font-semibold">10<span class="text-sm text-gray-400">/200</span></div>
-        <div class="text-emerald-600 text-xs mt-1">▲ +12%</div>
-      </div>
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm text-gray-500">Distribution</div>
-        <div class="flex items-center gap-4 mt-2">
-          <div class="w-16 h-16 rounded-full border-[10px] border-amber-400 relative">
-            <div class="absolute inset-2 rounded-full border-[8px] border-indigo-400"></div>
-          </div>
-          <div class="text-xs text-gray-600">
-            <div><span class="inline-block w-2 h-2 rounded-full bg-amber-400 mr-2"></span>Remote 23%</div>
-            <div><span class="inline-block w-2 h-2 rounded-full bg-indigo-400 mr-2"></span>Onsite 77%</div>
-          </div>
+  <div>
+    <!-- Header Section -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ user?.name || 'User' }}! 👋</h1>
+          <p class="text-gray-600 mt-1">{{ user?.admin_type_label || 'Admin Profile' }}</p>
+        </div>
+        <div class="text-left sm:text-right">
+          <p class="text-sm text-gray-500">{{ currentDate }}</p>
+          <p class="text-lg font-semibold text-gray-900">{{ currentTime }}</p>
         </div>
       </div>
     </div>
 
-    <!-- Widgets grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
-          <span>My Attendance</span>
-          <a href="#" class="text-xs text-gray-400">View Full Stats</a>
-        </div>
-        <div class="flex items-center gap-4">
-          <div class="w-28 h-28 rounded-full border-[12px] border-emerald-500 flex items-center justify-center">
-            <div class="text-center">
-              <div class="text-xl font-semibold">130</div>
-              <div class="text-xs text-gray-400">/45 hour spend</div>
-            </div>
-          </div>
-          <ul class="text-xs text-gray-600 space-y-1">
-            <li><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>45 Hrs Spending Hours</li>
-            <li><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>130 Hrs Total Hours</li>
-            <li><span class="inline-block w-2 h-2 rounded-full bg-indigo-500 mr-2"></span>75 Hrs Remaining Hours</li>
-            <li><span class="inline-block w-2 h-2 rounded-full bg-rose-500 mr-2"></span>10 Hrs not spent this week</li>
-          </ul>
-        </div>
+    <!-- Main Dashboard Content -->
+    <div class="space-y-6">
+      <!-- KPI Cards Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <EmployeeCountCard />
+        <AttendanceSummaryCard />
+        <LeaveSummaryCard />
+        <UpcomingHolidayCard />
       </div>
 
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
-          <span>Salary Slip</span>
-          <span class="text-xs">Current Month</span>
-        </div>
-        <div class="grid place-items-center py-6">
-          <div class="w-16 h-20 bg-gray-100 rounded shadow-inner grid place-items-center">PDF</div>
-          <button class="mt-4 px-4 py-1.5 rounded bg-indigo-600 text-white text-xs">Download</button>
-        </div>
+      <!-- Charts and Analytics Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ActivityChartCard />
+        <AttendanceChartCard />
       </div>
 
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
-          <span>Requests</span>
-          <div class="text-xs space-x-2">
-            <span class="text-emerald-600">● Approved</span>
-            <span class="text-rose-600">● Reject</span>
-            <span class="text-amber-500">● Pending</span>
-          </div>
-        </div>
-        <ul class="text-xs text-gray-700 space-y-2">
-          <li class="flex items-center justify-between"><span>New Laptop Request</span><span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700">Accepted</span><span class="text-gray-400">09-Oct-2023</span></li>
-          <li class="flex items-center justify-between"><span>Loan Request</span><span class="px-2 py-0.5 rounded bg-rose-50 text-rose-700">Rejected</span><span class="text-gray-400">08-Oct-2023</span></li>
-          <li class="flex items-center justify-between"><span>Salary Request</span><span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700">Pending</span><span class="text-gray-400">05-Oct-2023</span></li>
-        </ul>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-4 md:col-span-1">
-        <div class="text-sm text-gray-500 mb-2">Announcements & Notice Board</div>
-        <ul class="text-xs text-gray-700 space-y-2">
-          <li class="flex items-center justify-between"><span>Internal News</span><span class="text-gray-400">09-Oct-2023</span></li>
-          <li class="flex items-center justify-between"><span>Industry News</span><span class="text-gray-400">09-Oct-2023</span></li>
-          <li class="flex items-center justify-between"><span>Calendar Events</span><span class="text-gray-400">09-Oct-2023</span></li>
-        </ul>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="text-sm text-gray-500 mb-2">HR Policies</div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-gray-100 rounded h-24 grid place-items-center">PDF</div>
-          <div class="bg-gray-100 rounded h-24 grid place-items-center">PDF</div>
-        </div>
-        <button class="mt-4 px-4 py-1.5 rounded bg-indigo-600 text-white text-xs">Download</button>
-      </div>
-
-      <div class="bg-white rounded-xl shadow p-4">
-        <div class="flex items-center justify-between text-sm text-gray-500 mb-2">
-          <span>My Team</span>
-          <a href="#" class="text-xs">View All</a>
-        </div>
-        <ul class="text-xs text-gray-700 space-y-2">
-          <li class="flex items-center justify-between"><span>Umair Ali</span><span class="text-gray-500">Devops</span><span>📞</span></li>
-          <li class="flex items-center justify-between"><span>Hassan</span><span class="text-gray-500">Front-end Developer</span><span>📞</span></li>
-          <li class="flex items-center justify-between"><span>Murtaza</span><span class="text-gray-500">UI UX Designer</span><span>📞</span></li>
-        </ul>
+      <!-- Additional Statistics Row -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <DepartmentDistributionCard />
+        <RecentActivityCard />
+        <QuickActionsCard />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
+import EmployeeCountCard from '@/components/Dashboard/EmployeeCountCard.vue'
+import AttendanceSummaryCard from '@/components/Dashboard/AttendanceSummaryCard.vue'
+import LeaveSummaryCard from '@/components/Dashboard/LeaveSummaryCard.vue'
+import UpcomingHolidayCard from '@/components/Dashboard/UpcomingHolidayCard.vue'
+import ActivityChartCard from '@/components/Dashboard/ActivityChartCard.vue'
+import AttendanceChartCard from '@/components/Dashboard/AttendanceChartCard.vue'
+import DepartmentDistributionCard from '@/components/Dashboard/DepartmentDistributionCard.vue'
+import RecentActivityCard from '@/components/Dashboard/RecentActivityCard.vue'
+import QuickActionsCard from '@/components/Dashboard/QuickActionsCard.vue'
 
-const data = ref(null)
 const user = ref(null)
 
-async function load() {
-  const res = await axios.get('/dashboard/data')
-  data.value = res.data
+const currentDate = computed(() => {
+  return new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+})
+
+const currentTime = computed(() => {
+  return new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+})
+
+const loadUserData = async () => {
   try {
-    const me = await axios.get('/auth/user')
-    user.value = me.data
-  } catch (e) {
-    user.value = null
+    const response = await axios.get('/auth/user')
+    user.value = response.data
+  } catch (error) {
+    console.error('Error loading user data:', error)
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  loadUserData()
+})
 </script>
-

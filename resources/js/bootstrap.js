@@ -8,6 +8,26 @@ import axios from 'axios';
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+window.axios.defaults.baseURL = '/api';
+
+// Add response interceptor to handle token expiration
+window.axios.interceptors.response.use(
+  response => response,
+  async error => {
+    if (error.response?.status === 401) {
+      // Token expired or invalid, clear auth state
+      const { useAuthStore } = await import('./stores/auth');
+      const authStore = useAuthStore();
+      await authStore.logout();
+      
+      // Only redirect if not already on login page
+      if (window.location.pathname !== '/' && !window.location.pathname.includes('/forgot') && !window.location.pathname.includes('/reset')) {
+        window.location.href = '/';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 /**
  * Echo exposes an expressive API for subscribing to channels and listening

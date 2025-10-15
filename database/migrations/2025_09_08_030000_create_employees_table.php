@@ -10,6 +10,7 @@ return new class extends Migration
 	{
 		Schema::create('employees', function (Blueprint $table) {
 			$table->id();
+			$table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->restrictOnDelete();
 
 			// Personal Information
 			$table->string('first_name');
@@ -23,10 +24,10 @@ return new class extends Migration
 			// Professional Information
 			$table->string('employee_code')->unique();
 			$table->date('join_date');
-			$table->foreignId('department_id')->constrained('departments')->cascadeOnUpdate()->restrictOnDelete();
-			$table->foreignId('designation_id')->constrained('designations')->cascadeOnUpdate()->restrictOnDelete();
+			$table->unsignedInteger('department_id')->default(0);
+			$table->unsignedInteger('designation_id')->default(0);
 			$table->enum('status', ['active', 'inactive', 'terminated'])->default('active');
-			$table->decimal('salary', 12, 2)->nullable();
+			$table->unsignedInteger('salary')->default(0);
 
 			// Metadata
 			$table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

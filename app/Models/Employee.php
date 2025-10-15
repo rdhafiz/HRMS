@@ -11,6 +11,7 @@ class Employee extends Model
 	use HasFactory, SoftDeletes;
 
 	protected $fillable = [
+		'user_id',
 		'first_name',
 		'last_name',
 		'email',
@@ -24,12 +25,19 @@ class Employee extends Model
 		'designation_id',
 		'status',
 		'created_by',
+		'account_source',
+		'microsoft_id',
 	];
 
 	protected $casts = [
 		'date_of_birth' => 'date',
 		'join_date' => 'date',
 	];
+
+	public function user()
+	{
+		return $this->belongsTo(User::class);
+	}
 
 	public function department()
 	{
@@ -55,6 +63,7 @@ class Employee extends Model
 	{
 		return $this->hasOne(EmployeeSalaryStructure::class)->latest('effective_date');
 	}
+
 
 	public function getNameAttribute(): string
 	{

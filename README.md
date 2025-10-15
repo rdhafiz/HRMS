@@ -8,7 +8,8 @@ A comprehensive Human Resource Management system built with Laravel 10, Vue 3, a
 - **Authentication System** - Secure login/logout with password reset
 - **Employee Management** - Complete CRUD for employees with departments and designations
 - **Attendance Management** - Daily attendance tracking with check-in/out times
-- **Leave Management** - Leave request system with approval workflow
+- **Leave Management** - Comprehensive leave request system with approval workflow
+- **Employee Leave Portal** - Self-service leave application and history tracking
 - **Holiday Management** - Company holiday calendar
 - **Payroll System** - Complete salary management with pay slip generation
 - **Admin Management** - User administration (System Admin only)
@@ -17,6 +18,7 @@ A comprehensive Human Resource Management system built with Laravel 10, Vue 3, a
 - **System Admin** - Full access to all modules and features
 - **HR Manager** - Access to Employee Management, Attendance, Payroll, Reports
 - **Supervisor** - Read-only access to most modules (no create/edit/delete)
+- **Employee** - Self-service portal for leave applications, attendance history, and profile management
 
 ### Technical Features
 - **SPA Architecture** - Single Page Application with Vue 3
@@ -152,6 +154,14 @@ The system comes with a seeded admin user:
 - `POST /api/employment/leave-requests/{id}/decision` - Approve/reject leave
 - `DELETE /api/employment/leave-requests/{id}` - Delete leave request
 
+### Employee Leave Management (Employee role only)
+- `GET /api/leaves` - Get employee's own leave applications with filtering
+  - Query parameters: `status`, `leave_type`, `start_date`, `end_date`
+  - Returns paginated results with formatted dates and status labels
+- `POST /api/leaves` - Submit new leave application
+  - Body: `subject`, `application_body`, `leave_type`, `specific_dates` (array)
+  - Automatically sets `date_type: 'range'` and sends email notification to HR admins
+
 ### Holiday Management
 - `GET /api/employment/holidays` - List holidays
 - `POST /api/employment/holidays` - Create holiday
@@ -259,6 +269,16 @@ The regenerate endpoint allows System Administrators and HR Managers to recalcul
 - `/profile/update` - Update Profile (name, avatar)
 - `/profile/change-password` - Change own password
 
+### Employee Routes (Employee role only)
+- `/employee/dashboard` - Employee dashboard with quick access cards
+- `/employee/profile` - View employee profile
+- `/employee/profile/update` - Update employee profile
+- `/employee/profile/change-password` - Change password
+- `/employee/attendance` - View attendance history with filters
+- `/employee/holidays` - View company holidays
+- `/employee/leaves/apply` - Apply for leave with date range picker
+- `/employee/leaves/history` - View leave application history with filters
+
 ## 🔒 Role-Based Access Control
 
 ### System Admin (admin_type: 1)
@@ -285,6 +305,15 @@ The regenerate endpoint allows System Administrators and HR Managers to recalcul
 - Cannot create, edit, or delete any records
 - Cannot access Admin Management or Payroll Management
 
+### Employee (admin_type: 4)
+- Self-service portal access
+- Can view own profile and update personal information
+- Can view own attendance history with date range filtering
+- Can view company holidays
+- Can apply for leave with date range selection
+- Can view own leave application history with status filtering
+- Cannot access admin modules or other employees' data
+
 ## 📁 Project Structure
 
 ```
@@ -301,8 +330,10 @@ hrm.ridwan/
 │   │   ├── DepartmentController.php
 │   │   ├── DesignationController.php
 │   │   ├── EmployeeController.php
+│   │   ├── EmployeeProfileController.php
 │   │   ├── EmployeeSalaryStructureController.php
 │   │   ├── HolidayController.php
+│   │   ├── LeaveController.php
 │   │   ├── LeaveRequestController.php
 │   │   ├── PaySlipController.php
 │   │   ├── ProfileController.php
@@ -333,6 +364,7 @@ hrm.ridwan/
 │   ├── 2019_08_19_000000_create_failed_jobs_table.php
 │   ├── 2019_12_14_000001_create_personal_access_tokens_table.php
 │   ├── 2025_01_27_120000_create_pay_slips_table.php
+│   ├── 2025_01_27_130000_add_subject_and_dates_to_leave_requests_table.php
 │   ├── 2025_09_08_000000_create_user_logs_table.php
 │   ├── 2025_09_08_020000_create_departments_table.php
 │   ├── 2025_09_08_020100_create_designations_table.php
@@ -370,6 +402,16 @@ hrm.ridwan/
 │   │   │   ├── LeaveRequestForm.vue
 │   │   │   ├── Holidays.vue
 │   │   │   └── HolidayForm.vue
+│   │   ├── Employee/
+│   │   │   ├── Dashboard.vue
+│   │   │   ├── Profile.vue
+│   │   │   ├── UpdateProfile.vue
+│   │   │   ├── ChangePassword.vue
+│   │   │   ├── AttendanceHistory.vue
+│   │   │   ├── HolidayList.vue
+│   │   │   └── Leave/
+│   │   │       ├── ApplyLeave.vue
+│   │   │       └── LeaveHistory.vue
 │   │   ├── Auth/
 │   │   │   ├── Login.vue
 │   │   │   ├── ForgotPassword.vue
@@ -412,6 +454,18 @@ hrm.ridwan/
 - **PDF Generation** - Automatic PDF generation for pay slips with company branding
 - **Status Management** - Track pay slip status (Pending/Paid) with audit trail
 - **Salary History** - Complete history of salary changes for each employee
+
+### Leave Management System Features
+- **Employee Self-Service Portal** - Dedicated interface for employees to manage their leave
+- **Date Range Selection** - Intuitive Flatpickr date range picker for leave applications
+- **Leave Application Form** - Comprehensive form with subject, detailed reason, and leave type
+- **Leave History Tracking** - Complete history of all leave applications with status tracking
+- **Advanced Filtering** - Filter leave history by status, date range, and leave type
+- **Email Notifications** - Automatic email notifications to HR admins for new applications
+- **Status Management** - Track leave status (Pending/Approved/Rejected) with color-coded badges
+- **Professional UI** - Clean, responsive interface with Tailwind CSS styling
+- **Form Validation** - Client-side and server-side validation for data integrity
+- **Activity Logging** - Complete audit trail for all leave-related actions
 
 ### User Experience
 - **Responsive Design** - Works on desktop, tablet, and mobile
@@ -463,6 +517,19 @@ MAIL_ENCRYPTION=tls
 - Name: required, string, max 255
 - Avatar: image, formats: jpg/jpeg/png/webp, max 2MB
 - Change password: current password must match; new password min 8 and must include letters, numbers, and symbols; `new_password_confirmation` must match; optional `logout=true` to force re-login
+
+### Leave Management Database Schema
+The `leave_requests` table has been enhanced with additional fields:
+- `subject` - Application subject (string, nullable)
+- `application_body` - Detailed application reason (text, nullable)
+- `date_type` - Type of date selection (enum: single, range, multiple)
+- `specific_dates` - JSON array of selected dates
+- Existing fields: `employee_id`, `leave_type`, `start_date`, `end_date`, `reason`, `status`, `approved_by`
+
+### Email Notifications
+- **Leave Application Notifications** - Automatic emails sent to HR admins when employees submit leave applications
+- **Email Template** - Professional HTML template with employee details, leave information, and application content
+- **Recipient Management** - Notifications sent to all users with System Admin or HR Manager roles
 
 ## 🧪 Testing
 

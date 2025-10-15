@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 import Login from '../pages/Auth/Login.vue'
 import ForgotPassword from '../pages/Auth/ForgotPassword.vue'
@@ -14,6 +14,8 @@ import DesignationForm from '../pages/Employment/Designations/DesignationForm.vu
 import Employees from '../pages/Employment/Employees/Employees.vue'
 import EmployeeForm from '../pages/Employment/Employees/EmployeeForm.vue'
 import EmployeeView from '../pages/Employment/Employees/EmployeeView.vue'
+import TrainingPolicies from '../pages/Employment/TrainingPolicies/Index.vue'
+import TrainingPolicyCategories from '../pages/Employment/TrainingPolicies/CategoryList.vue'
 import DailyAttendance from '../pages/Attendance/DailyAttendance.vue'
 import LeaveRequests from '../pages/Attendance/LeaveRequests.vue'
 import LeaveRequestForm from '../pages/Attendance/LeaveRequestForm.vue'
@@ -23,34 +25,36 @@ import SalaryStructures from '../pages/Payroll/SalaryStructures.vue'
 import SalaryStructureForm from '../pages/Payroll/SalaryStructureForm.vue'
 import AssignSalaryStructure from '../pages/Payroll/AssignSalaryStructure.vue'
 import EmployeeSalaryView from '../pages/Payroll/EmployeeSalaryView.vue'
-import GeneratePaySlips from '../pages/payroll/GeneratePaySlips.vue'
-import PaySlipHistory from '../pages/payroll/PaySlipHistory.vue'
+import GeneratePaySlips from '../pages/Payroll/GeneratePaySlips.vue'
+import PaySlipHistory from '../pages/Payroll/PaySlipHistory.vue'
 import Admins from '../pages/Admins/Admins.vue'
 import AdminForm from '../pages/Admins/AdminForm.vue'
 import AdminProfile from '../pages/Profile/AdminProfile.vue'
+import TestCharts from '../pages/TestCharts.vue'
 import UpdateProfile from '../pages/Profile/UpdateProfile.vue'
 import ChangePassword from '../pages/Profile/ChangePassword.vue'
 import BrandingPage from '../pages/Profile/BrandingPage.vue'
-
-axios.defaults.withCredentials = true
-axios.defaults.baseURL = '/api'
-
-let cachedUser = null
-async function getUser() {
-  if (cachedUser) return cachedUser
-  const { data } = await axios.get('/auth/user')
-  cachedUser = data
-  return cachedUser
-}
+import SendNotification from '../pages/SendNotification.vue'
+import EmailHistory from '../pages/EmailHistory.vue'
+import EmployeeLayout from '../layouts/EmployeeLayout.vue'
+import EmployeeDashboard from '../pages/Employee/Dashboard.vue'
+import EmployeeProfile from '../pages/Employee/Profile.vue'
+import EmployeeUpdateProfile from '../pages/Employee/UpdateProfile.vue'
+import EmployeeChangePassword from '../pages/Employee/ChangePassword.vue'
+import EmployeeHolidayList from '../pages/Employee/HolidayList.vue'
+import EmployeeAttendanceHistory from '../pages/Employee/AttendanceHistory.vue'
+import EmployeeTrainingPolicies from '../pages/Employee/TrainingPolicies/Index.vue'
+import ApplyLeave from '../pages/Employee/Leave/ApplyLeave.vue'
+import LeaveHistory from '../pages/Employee/Leave/LeaveHistory.vue'
 
 const routes = [
   {
     path: '/',
     component: AuthLayout,
     children: [
-      { path: '', name: 'login', component: Login },
-      { path: 'forgot', name: 'forgot', component: ForgotPassword },
-      { path: 'reset', name: 'reset', component: ResetPassword },
+      { path: '', name: 'login', component: Login, meta: { guestOnly: true } },
+      { path: 'forgot', name: 'forgot', component: ForgotPassword, meta: { guestOnly: true } },
+      { path: 'reset', name: 'reset', component: ResetPassword, meta: { guestOnly: true } },
     ],
   },
   {
@@ -70,6 +74,9 @@ const routes = [
       { path: 'employees/create', name: 'employees.create', component: EmployeeForm, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id/edit', name: 'employees.edit', component: EmployeeForm, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       { path: 'employees/:id', name: 'employees.view', component: EmployeeView, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Training & Policies
+      { path: 'training-policies', name: 'training-policies', component: TrainingPolicies, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      { path: 'training-policy-categories', name: 'training-policy-categories', component: TrainingPolicyCategories, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       // Attendance
       { path: 'attendance/daily', name: 'attendance.daily', component: DailyAttendance, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'attendance/leaves', name: 'attendance.leaves', component: LeaveRequests, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
@@ -95,10 +102,37 @@ const routes = [
       { path: 'profile', name: 'profile', component: AdminProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/update', name: 'profile.update', component: UpdateProfile, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
       { path: 'profile/change-password', name: 'profile.password', component: ChangePassword, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
+      // Test Charts (for debugging)
+      { path: 'test-charts', name: 'test.charts', component: TestCharts, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
       // Settings - Branding (System Admin only)
       { path: 'branding', name: 'branding', component: BrandingPage, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN'] } },
+      // Email Notifications
+      { path: 'email-notifications/send', name: 'email.send', component: SendNotification, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER'] } },
+      { path: 'email-notifications/history', name: 'email.history', component: EmailHistory, meta: { requiresAuth: true, roles: ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR'] } },
     ],
   },
+  {
+    path: '/employee',
+    component: EmployeeLayout,
+    children: [
+      { path: 'dashboard', name: 'employee.dashboard', component: EmployeeDashboard, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile', name: 'employee.profile', component: EmployeeProfile, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile/update', name: 'employee.profile.update', component: EmployeeUpdateProfile, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'profile/change-password', name: 'employee.profile.change-password', component: EmployeeChangePassword, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'holidays', name: 'employee.holidays', component: EmployeeHolidayList, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'attendance', name: 'employee.attendance', component: EmployeeAttendanceHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'training-policies', name: 'employee.training-policies', component: EmployeeTrainingPolicies, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      // Leave Management
+      { path: 'leaves/apply', name: 'employee.leaves.apply', component: ApplyLeave, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      { path: 'leaves/history', name: 'employee.leaves.history', component: LeaveHistory, meta: { requiresAuth: true, roles: ['EMPLOYEE'] } },
+      // Add more employee routes here as needed
+    ],
+  },
+  // Catch-all route for undefined routes - redirect to login
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: { name: 'login' }
+  }
 ]
 
 const router = createRouter({
@@ -107,18 +141,79 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (!to.meta.requiresAuth) return next()
-  try {
-    const user = await getUser()
-    const roles = to.meta.roles || ['SYSTEM ADMIN','HR MANAGER','SUPERVISOR']
-    if (roles.includes(user.admin_type_label)) {
-      return next()
+  const authStore = useAuthStore()
+  
+  // Initialize auth state if not already done
+  if (!authStore.user && authStore.token) {
+    try {
+      await authStore.fetchUser()
+    } catch (error) {
+      // Token is invalid, clear auth state
+      await authStore.logout()
     }
-    return next({ name: 'dashboard' })
-  } catch (e) {
-    return next({ name: 'login' })
   }
+  
+  // Check if route is guest-only (login, forgot password, reset password)
+  if (to.meta.guestOnly) {
+    // If user is authenticated, redirect to appropriate dashboard
+    if (authStore.isAuthenticated) {
+      if (authStore.userRole === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      } else {
+        return next({ name: 'dashboard' })
+      }
+    }
+    
+    // User is not authenticated, allow access to auth pages
+    return next()
+  }
+  
+  // Check if route requires authentication
+  if (to.meta.requiresAuth) {
+    // If user is not authenticated, redirect to login
+    if (!authStore.isAuthenticated) {
+      return next({ name: 'login' })
+    }
+    
+    // Double-check authentication status with server
+    const isAuthenticated = await authStore.checkAuthStatus()
+    if (!isAuthenticated) {
+      return next({ name: 'login' })
+    }
+    
+    // Check role-based access
+    if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
+      // Redirect employees to their dashboard if they try to access admin routes
+      if (authStore.userRole === 'EMPLOYEE') {
+        return next({ name: 'employee.dashboard' })
+      }
+      
+      // Redirect other users to their appropriate dashboard
+      return next({ name: 'dashboard' })
+    }
+    
+    // Microsoft Login Middleware: Prevent Microsoft-login employees from accessing Change Password
+    if (authStore.user && 
+        authStore.user.account_source === 'microsoft_login' && 
+        authStore.user.microsoft_id) {
+      
+      // Check if trying to access Change Password routes
+      if (to.name === 'employee.profile.change-password' || to.name === 'profile.password') {
+        // Redirect to appropriate dashboard based on user role
+        const redirectRoute = authStore.userRole === 'EMPLOYEE' ? 'employee.dashboard' : 'dashboard'
+        
+        // Store a message for the user (optional - can be displayed via toast/notification)
+        sessionStorage.setItem('microsoft_login_message', 'You cannot change your password since you logged in using Microsoft account.')
+        
+        return next({ name: redirectRoute })
+      }
+    }
+    
+    return next()
+  }
+  
+  // For any other routes (shouldn't happen with current setup), redirect to login
+  return next({ name: 'login' })
 })
 
 export default router
-
