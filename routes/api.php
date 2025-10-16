@@ -117,6 +117,8 @@ Route::middleware(['auth:sanctum', 'throttle.custom:api'])->prefix('employment')
         Route::post('employees', [EmployeeController::class, 'store']);
         Route::put('employees/{employee}', [EmployeeController::class, 'update']);
         Route::delete('employees/{employee}', [EmployeeController::class, 'destroy']);
+        // Employee Training Policies (Admin/HR access)
+        Route::get('employees/{employee}/training-policies', [EmployeeController::class, 'trainingPolicies']);
     });
 
     // Attendance Module

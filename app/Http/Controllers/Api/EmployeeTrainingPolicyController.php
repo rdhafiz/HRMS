@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\EmployeeTrainingPolicy;
 use App\Models\TrainingAndPolicy;
 use App\Models\TrainingPolicyCategory;
@@ -15,19 +16,34 @@ class EmployeeTrainingPolicyController extends Controller
     /**
      * Get all training policies with completion status for the authenticated employee.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
             $user = Auth::user();
             
-            // Get employee record
-            $employee = $user->employee;
-            if (!$employee) {
-                return response()->json(['error' => 'Employee record not found'], 404);
+            // Check if requesting training policies for a specific employee (for admin/HR view)
+            $employeeUserId = $request->get('employee_user_id');
+            if ($employeeUserId) {
+                // Verify the employee exists
+                $targetEmployee = Employee::where('user_id', $employeeUserId)->first();
+                if (!$targetEmployee) {
+                    return response()->json(['error' => 'Employee not found'], 404);
+                }
+                
+                // Use the specified employee's user ID
+                $targetUserId = $employeeUserId;
+            } else {
+                // Get employee record for authenticated user
+                $employee = $user->employee;
+                if (!$employee) {
+                    return response()->json(['error' => 'Employee record not found'], 404);
+                }
+                
+                $targetUserId = $user->id;
             }
 
-            // Get completed training policy IDs for this employee
-            $completedIds = EmployeeTrainingPolicy::where('employee_user_id', $user->id)
+            // Get completed training policy IDs for the target employee
+            $completedIds = EmployeeTrainingPolicy::where('employee_user_id', $targetUserId)
                 ->pluck('training_policy_id')
                 ->toArray();
 

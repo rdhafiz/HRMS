@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\EmployeeSalaryStructure;
+use App\Models\EmployeeTrainingPolicy;
+use App\Models\TrainingPolicyCategory;
 use App\Models\User;
 use App\Models\UserLog;
 use App\Constants\UserRoles;
@@ -119,6 +121,73 @@ class EmployeeController extends Controller
 	public function show(Employee $employee)
 	{
 		return $employee->load(['department', 'designation', 'currentSalaryStructure.structure.components']);
+	}
+
+	/**
+	 * Get training policies for a specific employee (Admin/HR access)
+	 */
+	public function trainingPolicies(Employee $employee)
+	{
+		try {
+			// Verify the employee has a user account
+			if (!$employee->user) {
+				return response()->json(['error' => 'Employee user account not found'], 404);
+			}
+
+			// Get completed training policy IDs for this employee
+			$completedIds = EmployeeTrainingPolicy::where('employee_user_id', $employee->user_id)
+				->pluck('training_policy_id')
+				->toArray();
+
+			// Get all categories with their training policies
+			$categories = TrainingPolicyCategory::with([
+				'trainingsAndPolicies' => function ($query) {
+					$query->orderBy('type')->orderBy('title');
+				},
+				'children' => function ($query) {
+					$query->with(['trainingsAndPolicies' => function ($query) {
+						$query->orderBy('type')->orderBy('title');
+					}]);
+				}
+			])
+			->parents()
+			->orderBy('type')
+			->orderBy('title')
+			->get();
+
+			// Transform data to include completion status
+			$categories = $categories->map(function ($category) use ($completedIds) {
+				// Handle parent category trainings and policies
+				$category->trainings_and_policies = $category->trainingsAndPolicies->map(function ($trainingPolicy) use ($completedIds) {
+					$trainingPolicy->completed = in_array($trainingPolicy->id, $completedIds);
+					return $trainingPolicy;
+				});
+
+				// Handle child category trainings and policies
+				$category->children = $category->children->map(function ($child) use ($completedIds) {
+					$child->trainings_and_policies = $child->trainingsAndPolicies->map(function ($trainingPolicy) use ($completedIds) {
+						$trainingPolicy->completed = in_array($trainingPolicy->id, $completedIds);
+						return $trainingPolicy;
+					});
+					return $child;
+				});
+
+				return $category;
+			});
+
+			return response()->json([
+				'success' => true,
+				'data' => $categories,
+				'message' => 'Training policies retrieved successfully'
+			]);
+
+		} catch (\Exception $e) {
+			return response()->json([
+				'success' => false,
+				'message' => 'Failed to retrieve training policies',
+				'error' => $e->getMessage()
+			], 500);
+		}
 	}
 
 	public function update(Request $request, Employee $employee)
