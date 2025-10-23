@@ -1,9 +1,9 @@
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900">
+  <div class="min-h-screen text-gray-900">
     <Header :user="user" @logout="logout"></Header>
     <div class="flex">
       <SideNav :user="user" />
-      <main class="flex-1">
+      <main class="flex-1 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <!-- Universal Container -->
         <div class="max-w-7xl mx-auto px-4 py-6">
           <router-view v-slot="{ Component }">
